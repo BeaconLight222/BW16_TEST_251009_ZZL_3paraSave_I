@@ -1009,7 +1009,7 @@ void sendLoggingAndTelemetryDataToServer() {
 
                          " ] " + "}" +
 
-                         ", \"firmwareVersion\": " + "\"2026.02.11\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
+                         ", \"firmwareVersion\": " + "\"2026.06.02\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
                          //", \"sensorHealth\": "         + String( lightControl.getsensorHealth() ? "\"ok\"":"\"fault\"") +
                          ", \"error\": " + String(get_errorStatus()) +
                          //", \"error\": "                + "0"                                                            +
@@ -1027,7 +1027,7 @@ void sendLoggingAndTelemetryDataToServer() {
 
 void loop() {
 
-  Serial.println("\r\n—————————————————————————————— Beacon Device Loop Start ————————————————————————————————————————————");
+  // Serial.println("\r\n—————————————————————————————— Beacon Device Loop Start ————————————————————————————————————————————");
 
   {
     lightControl.lightState = lightControl.getLightState();
@@ -1046,7 +1046,7 @@ void loop() {
     beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP, false);
   }
 
-  Serial.println("START Checking Button Acitivity ————————————————————————————————————————————");
+  // Serial.println("START Checking Button Acitivity ————————————————————————————————————————————");
   int buttonState = checkButtonActivity();
   if ((buttonState & (1 << 0))) {
     Serial.println("Button short pressed_________________________________________________________________");
@@ -1078,9 +1078,9 @@ void loop() {
 
   }
 
-  Serial.println("———————————————————————————————————————————— END Checking Button Acitivity");
+  // Serial.println("———————————————————————————————————————————— END Checking Button Acitivity");
 
-  Serial.println("START Checking WiFi Connection ————————————————————————————————————————————");
+  // Serial.println("START Checking WiFi Connection ————————————————————————————————————————————");
   fetchWifiSetting();
   char *ssid = getWifiSsidAfterFetch();
   char *password = getWifiPasswordAfterFetch();
@@ -1095,9 +1095,9 @@ void loop() {
       lightControl.setLightState(false);
     }
   }
-  Serial.println("———————————————————————————————————————————— END Checking WiFi Connection");
+  // Serial.println("———————————————————————————————————————————— END Checking WiFi Connection");
 
-  Serial.println("START Handling WiFi Connection ————————————————————————————————————————————");
+  // Serial.println("START Handling WiFi Connection ————————————————————————————————————————————");
   if (wifiWasConnected != wifiConnected) {
     if (wifiConnected) {
 
@@ -1371,10 +1371,10 @@ void loop() {
       }    //end        if (lightControl.inProgress8hourSectionStartTime > 0)
     }      //end  {}
   }        //end    else
-  Serial.println("———————————————————————————————————————————— END Handling WiFi Connection");
+  // Serial.println("———————————————————————————————————————————— END Handling WiFi Connection");
 
   processAwsMqtt_print(false);
   wifiWasConnected = wifiConnected;
   wdt.RefreshWatchdog();
-  Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
+  // Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
 }  //end void loop()
