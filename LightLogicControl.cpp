@@ -320,8 +320,8 @@ int LightLogicControl::getpersonCount() {
 
 /// @brief Timer interrupt handler for LED blinking
 void gTimer0handler(uint32_t data) {
+  (void)data;
 
-  //(void)data;
   gTimer0Counter++;
   int toggleCounter = ~(gTimer0Counter);
 
@@ -557,8 +557,7 @@ String LightLogicControl::getScheduleStrTad_print(bool fprint) {
   String textData = "";
   textData.reserve(dataByteLength * 16);  //8bit +8comma
 
-  bool flag;
-  uint8_t temp;
+  uint8_t temp = 0;
 
   for (uint8_t x = 0; x < 42; x++) {
     for (uint8_t y = 0; y < 8; y++) {
@@ -621,9 +620,8 @@ String LightLogicControl::getScheduleStrTad() {
   int dataByteLength = EEPROM_SCHEDULE_SIZE;
   String textData = "";
   textData.reserve(dataByteLength * 16);  //8bit +8comma
-  //  textData.reserve(dataByteLength *3); // eg 0xc1 become 'C'+‘1'; this is two byte now
-  bool flag;
-  uint8_t temp;
+
+  uint8_t temp = 0 ;
 
   for (uint8_t x = 0; x < 42; x++) {
     for (uint8_t y = 0; y < 8; y++) {
@@ -1549,7 +1547,6 @@ uint8_t LightLogicControl::findWhichLevelSection(uint32_t sectionStartTime) {
   }
 
   uint32_t minimalStartTime = 0xFFFFFFFF;  // Initialize to a large value
-  int minimalStartTimeSectionIndex = 0;    // Initialize to -1 to indicate no valid address found
 
   for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
     uint16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
@@ -1573,7 +1570,6 @@ uint8_t LightLogicControl::findWhichLevelSection(uint32_t sectionStartTime) {
 
     if (storedSectionStartTime < minimalStartTime) {
       minimalStartTime = storedSectionStartTime;
-      minimalStartTimeSectionIndex = i;
     }
 
     if (storedSectionStartTime == sectionStartTime) {
@@ -2636,7 +2632,7 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
       break;
   }  //end switch
 
-}  //end    int LightLogicControl::processLightControl(
+}  //end    int LightLogicControl::processLightControl
 
 const char* LightLogicControl::getCompiledTimeStr() {
   return compiledTimeStr;

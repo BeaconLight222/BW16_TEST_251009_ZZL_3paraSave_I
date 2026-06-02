@@ -404,7 +404,7 @@ void processAwsMqtt_print(bool fprint) {
       Serial.println("process aws mqtt:");
     }
 
-    for (int n = 0; n < payload_manager.list_newModeCommand.size(); n++) {
+    for (unsigned int n = 0; n < payload_manager.list_newModeCommand.size(); n++) {
       if (fprint) {
         Serial.print("newModeCommand:");
         Serial.print(n);
@@ -618,7 +618,6 @@ void print_now() {
 /// In this project, it checks bootloader, initializes the sensors \n
 /// And then Wifi and BLE
 void setup() {
-  uint8_t u8_temp;
   //send SCK clocks on PA25 to unfreeze the I2C
   pinMode(PA25, OUTPUT);
   pinMode(PA25, INPUT);
@@ -962,7 +961,6 @@ void getSensorData(bool wifiStatus) {
 }  //end      void getSensorData(bool wifiStatus)
 
 void sendLoggingAndTelemetryDataToServer() {
-  // awsMqtt.logSensorToServer((char *)lightControl.getSensorDataJson().c_str());
   bool occupied = (lightControl.calculatedMinimalDistance < 2000);  //consider occupied if someone is closer than 2 meters
   bool lampStatus = lightControl.getLightState();
   bool lampEnable = (lightControl.uvLampMode != UV_MODE_OFF);
@@ -973,23 +971,13 @@ void sendLoggingAndTelemetryDataToServer() {
   bool scheduleEnable = awsMqtt.scheduleEnabled;
   bool factoryReset = payload_manager.payload_command_sub.factoryReset;
   bool wifiReset = payload_manager.payload_command_sub.wifiReset;
-
   int telemetryIntervalSeconds = awsMqtt.telemetryIntervalSeconds;
-
-  uint8_t *scheduleData = payload_manager.payload_deviceConfig_sub.scheduleData;
   int timeZoneOffsetMinutes = payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes;
-  char *firmwareVersion = __DATE__ " " __TIME__;
-  int accumulatedExposure = lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
-  int personCount = lightControl.personCount;
-  float temperaturCelsius = lightControl.temperatureData;
-  char *lastCommandStatus = "success";
-  uint8_t motionEvents = 0;
-
   int uptimeSeconds = (millis() - program_StartUpTime) / 1000;
 
   uint32_t lastErrorTimestamp = payload_manager.payload_telemetry_pub.lastErrorTimestamp;
 
-  char *sensorHealth = "ok";
+  // char *sensorHealth = "ok";
 
   Serial.print("awsMqtt.scheduleEnabled____________________:");
   Serial.println(awsMqtt.scheduleEnabled);
@@ -1199,8 +1187,8 @@ void loop() {
         bleAdvertisingForWifiConfig = false;
 
         //try wifi one more time
-        int wifiReturn;
-        char *ssidFromFlash, *passwordFromFlash;
+        int wifiReturn = 0;
+        char *ssidFromFlash = NULL, *passwordFromFlash = NULL;
         NonvolatileDataManager::getSsidPasswordFromFlash(&ssidFromFlash, &passwordFromFlash);
         if (ssidFromFlash[0] != 0) {
           Serial.print("Trying to connect to stored WiFi credentials: ");
@@ -1213,6 +1201,8 @@ void loop() {
           } else {
             wifiReturn = WiFi.begin(ssidFromFlash, passwordFromFlash);  // Connect with password
           }
+          Serial.print("WiFi.begin return: ");
+          Serial.println(wifiReturn);
           lastWifiTryConnectTime = millis();
         }
       }
