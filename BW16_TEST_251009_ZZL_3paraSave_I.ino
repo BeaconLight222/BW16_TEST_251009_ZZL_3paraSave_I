@@ -93,8 +93,6 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 
-//#include "ioExpander.h"
-
 #include "esp32Provision.h"
 #include "AwsMqtt.h"
 #include "NonvolatileDataManager.h"
@@ -103,17 +101,6 @@
 #include "LightLogicControl.h"
 
 #include "payload.h"
-
-
-//PCA9539 ioport;
-//PCA9539 ioport(0x77);
-
-//#define BALLAST_CONTROL_SIGNAL   AMB_D12
-//#define LOGIC_HIGH          1
-//#define LOGIC_LOW           0
-//#define MODE_OUTPUT   0x00
-//#define MODE_INPUT    0x01
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -126,28 +113,20 @@ extern "C" {
 #endif
 
 uint32_t program_StartUpTime = 0;
-//static uint32_t program_StartUpTime  = 0;
 
 unsigned long previousMillis = 0;  // Stores the last time the event occurred
 
 unsigned long interval = 1000;
-//const long interval = 1000;
 
-//volatile bool       fToggle;
 static bool fToggle;
-//uint32_t          timeOneSec=0;
 
 EnergyEngineer beaconEnergyEngineer;
 
 
 extern PAYLOAD_MANAGER payload_manager;
 LightLogicControl lightControl;
-// BLEWifiConfigService configService;
 
-//extern  volatile bool gf_loop;
-//extern  static volatile int gTimer0Counter;
 extern volatile int gTimer0Counter;
-
 
 uint32_t lastWifiConnectedTime = 0;
 uint32_t lastWifiTryConnectTime = 0;
@@ -162,7 +141,6 @@ ESP32Provision *esp32Provision = nullptr;
 uint32_t lastEsp32ProvisionActivityMillis = 0;
 
 BEACON_PCB beacon_pcb;
-//IO_PCA9539 ioport;
 
 #define UNDEFINED 255
 #define UV_LAMP_ON 1
@@ -189,47 +167,10 @@ uint8_t get_errorStatus();
 void record_lastErrorTimestamp();
 void action_diagnosticlevel(bool wifiConnected, uint8_t diagnosticlevel);
 void resetWifi();
-//void      processAwsMqtt();
 void print_second();
 void print_now();
 //end of local function declaration
 
-
-
-/*
-#define TEMPATURE_TH_HIGH    (34)
-#define TEMPATURE_TH_LOW     (30)
-void fanControl(){
-  float temperatureFromTMP;
-  temperatureFromTMP = lightControl.getTemperatureData();
-  Serial.print("LightLogicControl::Sensor TMP temperature:");
-  Serial.println(temperatureFromTMP);
-
-  if( lightControl.lightState || (temperatureFromTMP>TEMPATURE_TH_HIGH) ){
-  ioport.fanOn();
-  }
-
-  if(( !lightControl.lightState ) && ( temperatureFromTMP < TEMPATURE_TH_LOW  )){
-  ioport.fanOff();  
-  }
-
-
-
-}//end void fanControl
-*/
-
-/*
-#define   ERROR_NO                        0
-#define   ERROR_MQTT_DISCONNECT           100
-#define   ERROR_RADAR1_INVALID            101
-#define   ERROR_RADAR2_INVALID            102
-#define   ERROR_THERMAL_INVALID           103
-#define   ERROR_RTC_INVALID               104
-#define   ERROR_EEPROM_INVALID            105
-#define   ERROR_TEMPERATURE_INVALID       106
-#define   ERROR_2XRADAR_INVALID           107
-#define   ERROR_3XSENSOR_INVALID          108
-*/
 
 uint8_t get_errorStatus() {
   uint8_t error = ERROR_UNDEFINED;
@@ -258,16 +199,6 @@ uint8_t get_errorStatus() {
 
   lightControl.errorStatus = error;
   return lightControl.errorStatus;
-  /*
-                    if(!lightControl.radar1Valid)             { lightControl.errorStatus = ERROR_RADAR1_INVALID;                      }
-                      if(!lightControl.radar2Valid)             { lightControl.errorStatus = ERROR_RADAR2_INVALID;                      }
-                      if(!lightControl.thermalSensorValid)      { lightControl.errorStatus = ERROR_THERMAL_INVALID;                     }
-                      if(!lightControl.rtcValid)                { lightControl.errorStatus = ERROR_RTC_INVALID;                         }
-                      if(!lightControl.eepromValid)             { lightControl.errorStatus = ERROR_EEPROM_INVALID;                      }
-                      if(!lightControl.temperatureSensorValid)  { lightControl.errorStatus = ERROR_TEMPERATURE_INVALID;                 }
-                      if( !(lightControl.radar1Valid || lightControl.radar2Valid) ){ lightControl.errorStatus = ERROR_2XRADAR_INVALID;  }
-                      if(   payload_manager.payload_command_sub.wifiReset  ){  lightControl.errorStatus = ERROR_SYSRESET_WIFI;          }
-*/
 
 }  //end      uint8_t   get_errorStatus()
 
@@ -367,17 +298,6 @@ void action_diagnosticlevel(bool wifiConnected, uint8_t diagnosticlevel) {
       case 0:
 
         get_errorStatus();
-        /*
-                      if(!lightControl.radar1Valid)             { lightControl.errorStatus = ERROR_RADAR1_INVALID;                      }
-                      if(!lightControl.radar2Valid)             { lightControl.errorStatus = ERROR_RADAR2_INVALID;                      }
-                      if(!lightControl.thermalSensorValid)      { lightControl.errorStatus = ERROR_THERMAL_INVALID;                     }
-                      if(!lightControl.rtcValid)                { lightControl.errorStatus = ERROR_RTC_INVALID;                         }
-                      if(!lightControl.eepromValid)             { lightControl.errorStatus = ERROR_EEPROM_INVALID;                      }
-                      if(!lightControl.temperatureSensorValid)  { lightControl.errorStatus = ERROR_TEMPERATURE_INVALID;                 }
-                      if( !(lightControl.radar1Valid || lightControl.radar2Valid) ){ lightControl.errorStatus = ERROR_2XRADAR_INVALID;  }
-                      if(   payload_manager.payload_command_sub.wifiReset  ){  lightControl.errorStatus = ERROR_SYSRESET_WIFI;          }
-                    */
-
 
         Serial.println("__________________________  diagnosticlevel 0  _____________________________________");
 
@@ -451,7 +371,6 @@ void resetWifi() {
   Serial.println("_____________________________  resetWifi  _________________________________________");
 
   record_lastErrorTimestamp_print(false);
-  //record_lastErrorTimestamp();
 
   uint8_t status;
   lightControl.setBitEeprom(EEPROM_STATUS_ADDRESS, EEPROM_STATUS_BIT_POSITION_WIFI);
@@ -459,13 +378,10 @@ void resetWifi() {
   Serial.print("resetWifi::status:");
   Serial.println(status, HEX);
 
-  //  Serial.println("Button long pressed");
   NonvolatileDataManager::eraseSsidPasswordFromFlash();
   lightControl.setUiLedState(UI_LED_BLUE, UI_LED_BLINK);
   lightControl.setUiLedState(UI_LED_RED, UI_LED_BLINK);
   delay(1000);
-
-  //lightControl.errorStatus = ERROR_SYSRESET_WIFI;
 
   sys_reset();
   while (1)
@@ -538,12 +454,6 @@ void processAwsMqtt_print(bool fprint) {
 
           lightControl.eepromRead16LevelSection(lightControl.inProgress8hourSectionStartTime);
 
-          /*  
-                lightControl.eepromRead16LevelSection(  lightControl.inProgress8hourSectionStartTime    );
-                lightControl.eepromInit_16LevelSection( lightControl.inProgress8hourSectionStartTime);
-                lightControl.accumulatedExposure=0;
-                lightControl.eepromRead16LevelSection(lightControl.inProgress8hourSectionStartTime);
-*/
         } else {
           //dummmy
         }
@@ -666,65 +576,6 @@ void processAwsMqtt_print(bool fprint) {
     Serial.println(lightControl.uvLampMode);
     lightControl.setDetectionModeEeprom();
 
-    /*
-void    LightLogicControl::setDetectionModeEeprom(){
-
-      {   //start of block of write      uvLampMode  into eeprom, ie detectionMode
-          int uvLampMode = lightControl.uvLampMode;
-          uint8_t  byteData[4]={0};
-          memcpy(byteData,&uvLampMode,sizeof(uvLampMode));
-          lightControl.eeprom.write( EEPROM_UV_LAMP_MODE, byteData, sizeof(byteData)  );
-
-          if(true){ //verify the uvLampMode in eeprom
-           lightControl.getUvLampModeEeprom();
-
-          //  uint8_t  checkByte[4]={0};
-          //  int      checking_uvLampMode =0 ;
-          //  if(true){
-          //  Serial.print("Before checking_uvLampMode_______________________________:");Serial.println(checking_uvLampMode);
-          //  }//end 
-          //  lightControl.eeprom.read( EEPROM_UV_LAMP_MODE, checkByte, sizeof(checkByte)  );
-          //  memcpy(  &checking_uvLampMode,  checkByte, sizeof(checkByte) );
-
-          //  if(true){
-          //  Serial.print("After checking_uvLampMode:");Serial.println(checking_uvLampMode);
-          //  }
-      
-       
-          }//end    if(true){ //verify
-
-      } // end of block of write      uvLampMode  into eeprom, ie detectionMode
-*/
-
-    /*
-      int  timeZoneOffsetMinutes = payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes;
-          uint8_t  byteData[4]={0};
-          memcpy(byteData,&timeZoneOffsetMinutes,sizeof(timeZoneOffsetMinutes));
-          lightControl.eeprom.write(EEPROM_TIME_ZONE_OFFSET_MINUTES,byteData,sizeof(byteData));
-
-                                if(true)
-          {// vertify timeZoneOffsetMinutes saved in eeprom
-            uint8_t  checkByte[4]={0};  
-            int checkingTime=0;
-
-            if(false){
-            Serial.print("Before checkingTime____________________________________:");Serial.println(checkingTime);
-            }  
-
-            lightControl.eeprom.read(  EEPROM_TIME_ZONE_OFFSET_MINUTES, checkByte, sizeof( checkByte  ) );
-            memcpy( &checkingTime,checkByte,sizeof(checkByte));
-
-            if(false){
-            Serial.print("After checkingTime:");Serial.println(checkingTime);
-            }
-
-          }//end if
-*/
-
-
-
-
-
     payload_manager.list_newModeCommand.clear();
 
     if (fprint) {
@@ -741,118 +592,6 @@ void    LightLogicControl::setDetectionModeEeprom(){
   }  //end if ( payload_manager.list_newModeCommand.size()>0 )
 
 }  //end  void processAwsMqtt_print
-
-
-
-
-/*
-void processAwsMqtt(){
-  if ( payload_manager.list_newModeCommand.size()>0 ){
-      char *ssid = getWifiSsidAfterFetch();
-      bool wifiConnected = (ssid[0] != 0);
-
-    String mode;
-    Serial.println("process aws mqtt:");
-
-      for(int n=0; n< payload_manager.list_newModeCommand.size(); n++){  
-      Serial.print("newModeCommand:");
-      Serial.print(n); Serial.print("\t");
-      Serial.println(payload_manager.list_newModeCommand[n]);
-      mode=payload_manager.list_newModeCommand[n];
-      
-      if(mode=="UV_MODE_SMART"){
-      lightControl.uvLampMode = INT_UV_MODE_SMART;
-      }
-
-      if(mode=="UV_MODE_MANUAL"){
-      lightControl.uvLampMode = INT_UV_MODE_MANUAL;
-      }else if(mode=="UV_MODE_OFF"){
-      lightControl.uvLampMode = INT_UV_MODE_OFF;    
-      //lightControl.uvLampMode = UV_MODE_OFF;
-      }
-
-      if(mode=="UV_MODE_UNLIMITED"){
-      lightControl.uvLampMode = INT_UV_MODE_UNLIMITED;
-      }
-
-      if(mode=="UV_MODE_OCCUPIED_ROOM"){
-         lightControl.uvLampMode = INT_UV_MODE_OCCUPIED_ROOM; 
-        // lightControl.uvLampMode = UV_MODE_OCCUPIED_ROOM;
-      }
-
-      if(mode=="UV_MODE_EMPTY_ROOM"){
-      lightControl.uvLampMode = INT_UV_MODE_EMPTY_ROOM;
-      }
-
-      if (mode == "RESET_WIFI") {
-        Serial.print("awsMqtt.wifiReset");Serial.println(awsMqtt.wifiReset);
-        sendLoggingAndTelemetryDataToServer();
-        
-        payload_manager.list_newModeCommand.clear();
-        resetWifi();
-            }
-
-      if(mode =="JOB_MUTE_ALARMS"){
-          unsigned char data = payload_manager.payload_command_sub.muteAlarms? 0x55:0xAA;   
-          lightControl.eeprom.write(EEPROM_MUTEALARMS_ADDRESS, &data, sizeof(data));
-
-            }
-
-      if( mode == "JOB_DEFAULT_DETECTION" ){
-          unsigned char data = payload_manager.payload_deviceConfig_sub.defaultDetectionMode;
-          lightControl.eeprom.write(  EEPROM_DEFAULT_DETECTION_MODE_ADDRESS, &data, sizeof(data));
-          Serial.print("lightControl.eeprom.write.DEFAULT:");Serial.println(data);
-      }//end  if( mode == "JOB_DEFAULT_DETECTION" )
-
-      if( mode == "JOB_LAMP_STARTUP_STATE" ){
-        unsigned char data= UNDEFINED ;
-        String lampStartupState =  payload_manager.payload_deviceConfig_sub.lampStartupState;
-          
-          if(lampStartupState == "lastKnown"){
-             data = 2; 
-          }else if(lampStartupState =="On"){
-             data = 1; 
-          }else if(lampStartupState =="Off"){
-             data = 0; 
-          }else{
-            //dummy
-          }
-          lightControl.eeprom.write(  EEPROM_LAMP_STARTUP_STATE_ADDRESS, &data, sizeof(data));
-          data=UNDEFINED;
-          lightControl.eeprom.read(  EEPROM_LAMP_STARTUP_STATE_ADDRESS, &data, sizeof(data));
-          Serial.print("EEPROM_LAMP:");Serial.println(data);
-      }//end      if( mode == "JOB_LAMP_STARTUP_STATE" )
-
-        if( mode == "JOB_SCHEDULE" ){
-          lightControl.eepromWriteSchedule();
-          lightControl.getScheduleStrTad_print(false);
-          //lightControl.getScheduleStrTad();
-          //lightControl.getScheduleStr();
-        }//end  if( mode == "JOB_SCHEDULE" )
-
-        if( mode =="JOB_THRES_ACCUMULATED_EXPOSURE"  ){
-            lightControl.accumulatedExposureThreshold = payload_manager.payload_command_sub.thresAccumulatedExposure;
-        }
-
-
-    }//end for
-
-    payload_manager.list_newModeCommand.clear();
-    Serial.print("Set UV lamp mode to: ");
-    Serial.println(lightControl.uvLampMode);
-
-    lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
-
-    if (wifiConnected) {
-      sendLoggingAndTelemetryDataToServer();
-    }
-
-  }//end if ( payload_manager.list_newModeCommand.size()>0 )
-
-}//end  void processAwsMqtt  
-*/
-
-
 
 void print_second() {
   uint8_t u8_temp;
@@ -914,21 +653,10 @@ void setup() {
       ;
   }
 
-
   beacon_pcb.allOutputLow();
   beacon_pcb.allOutputPin();
 
-
-
-
-  {
-    //beacon_pcb.beep_sound(3);
-  }
-
-
   {  // block of reading eeprom
-
-    //lightControl.getUvLampModeEeprom();
 
     {  // vertify timeZoneOffsetMinutes saved in eeprom
       uint8_t checkByte[4] = { 0 };
@@ -976,20 +704,6 @@ void setup() {
     }
   }
 
-
-  /*
-#ifdef BEEPER_ALWAYS_ON 
-          beacon_pcb.beep_sound(3);
-#else 
-          if(muteAlarms==0x55){
-              //
-          }else if(muteAlarms==0xaa){
-              beacon_pcb.beep_sound(3); 
-          }
-#endif
-*/
-
-
   int flashSize = OtaProcessor::checkFlashSize();
   if (flashSize != 4 * 1024 * 1024) {
     while (1) {
@@ -1030,32 +744,6 @@ void setup() {
   Serial.println("device name: ");
   Serial.println(NonvolatileDataManager::getThingName());
 
-  /*
-  lightControl.begin();
-  lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
-  getSensorData(false);
-*/
-
-  //  lightControl.getUvLampModeEeprom();
-
-
-  /*   
-          {
-            unsigned char lampCurrentState= UNDEFINED;
- 
-            lightControl.eeprom.read(EEPROM_LAMP_CURRENT_STATE_ADDRESS, &lampCurrentState, sizeof(lampCurrentState));  
-            Serial.print("eeprom.read.lampCurrentState:");
-            Serial.println(lampCurrentState);
-
-            bool state=false;
-            if(     lampCurrentState  ==  UV_LAMP_ON){  state = true;   }
-            else if(lampCurrentState  ==  UV_LAMP_OFF){ state = false;  }
-            
-            //lightControl.setLightState(true);
-            lightControl.setLightState(state);        //DEBUG  where is the LASTKNOWN
-          }
-*/
-
   //  lightControl.setLightState(false);  // Turn on the light
 
   Serial.println("Starting radar...");
@@ -1084,8 +772,6 @@ void setup() {
   lightControl.processSensorInfo(true);                                             //fetch distance, find min distance
   getSensorData(false);                                                             // emergency shut down below 30cm
 
-
-
   {
     if (!lightControl.radar1Valid) { record_lastErrorTimestamp_print(false); }
     if (!lightControl.radar2Valid) { record_lastErrorTimestamp_print(false); }
@@ -1094,18 +780,6 @@ void setup() {
     if (!lightControl.temperatureSensorValid) { record_lastErrorTimestamp_print(false); }
     if (!lightControl.rtcValid) { record_lastErrorTimestamp_print(false); }
   }
-
-
-  /*
-  {
-    if( !lightControl.radar1Valid           ){ record_lastErrorTimestamp();   }
-    if( !lightControl.radar2Valid           ){ record_lastErrorTimestamp();   }
-    if( !lightControl.thermalSensorValid    ){ record_lastErrorTimestamp();   }
-    if( !lightControl.eepromValid           ){ record_lastErrorTimestamp();   }
-    if( !lightControl.temperatureSensorValid){ record_lastErrorTimestamp();   }
-    if( !lightControl.rtcValid              ){ record_lastErrorTimestamp();   }
-  }
-*/
 
   payload_manager.payload_telemetry_pub.lastErrorTimestamp = lightControl.getLongWordEeprom(EEPROM_LASTERROR_TIMESTAMP_4);
 
@@ -1160,10 +834,6 @@ void setup() {
       delay(1000);
     }
     if (!atLeastOneSensorValid) {
-
-      //lightControl.errorStatus = ERROR_SYSRESET_ALLTHREE_SENSOR;
-      //awsMqtt.logSensorToServer(  (char *)lightControl.getDiagnosticsLevelJson_0().c_str()    );
-
       sys_reset();
       delay(100000);
     }
@@ -1204,10 +874,6 @@ void setup() {
   awsMqtt.begin();
 }  //end  void setup()
 
-
-
-
-
 void getSensorData(bool wifiStatus) {
   //calculate lamp on time for logging
   {
@@ -1229,8 +895,6 @@ void getSensorData(bool wifiStatus) {
 
   Serial.println("Fetching sensor data...");
   lightControl.checkRadarData(false);
-
-  //lightControl.checkThermalSensorData(true);
 
   lightControl.rtc.outputNowDateTime();  //currentRtcTime  = this->now();
 
@@ -1257,7 +921,6 @@ void getSensorData(bool wifiStatus) {
       lightControl.rtc.adjust(awsDateTime);  // Adjust RTC to AWS time
 
       lightControl.rtc.outputNowDateTime();  //currentRtcTime  = this->now();
-      //lightControl.getCurrentRtcTime();      // Update current RTC time
     }
     awsMqtt.initOtaJobTimeMessageUnixTime = 0;  // Reset after use
   }
@@ -1266,7 +929,6 @@ void getSensorData(bool wifiStatus) {
 
   bool fAnyObject = false;
   fAnyObject = lightControl.processSensorInfo(false);
-  //fAnyObject = lightControl.processSensorInfo(true);
   Serial.print("device detected at least one object:");
   Serial.println(fAnyObject);
 
@@ -1275,7 +937,6 @@ void getSensorData(bool wifiStatus) {
 
   //Emergency shutoff if user appear in 1FT, 30cm
   if ((lightControl.calculatedMinimalDistance < 300)) {
-    //if (((lightControl.uvLampMode == INT_UV_MODE_SMART) || (lightControl.uvLampMode == INT_UV_MODE_MANUAL) ||  (lightControl.uvLampMode == INT_UV_MODE_IDLE_MANUAL) )) {
     if (((lightControl.uvLampMode == UV_MODE_SMART) || (lightControl.uvLampMode == UV_MODE_MANUAL))) {
       Serial.println("Minimal distance is less than 30cm, turning off the light");
       if (lightControl.getLightState()) {
@@ -1283,15 +944,6 @@ void getSensorData(bool wifiStatus) {
         lightControl.turnOffandRecord();
         Serial.print("After turnOffandRecord lightControl.getLightState()__________________: ");
         Serial.println(lightControl.getLightState());
-
-        /*
-        lightControl.setLightState(false);  // Turn off the light
-            //lightControl.fEmergency = true;
-            lightControl.lampOnRecord[LAMP_ON_RECORD_EMERGENCY].lampOnTimeStamps_start = lightControl.lampOnRecordCache.lampOnTimeStamps_start;
-            lightControl.lampOnRecord[LAMP_ON_RECORD_EMERGENCY].lampOnTimeStamps_end   = lightControl.lampOnRecordCache.lampOnTimeStamps_end;
-            lightControl.lampOnRecord[LAMP_ON_RECORD_EMERGENCY].length                 = lightControl.lampOnRecordCache.length;
-            lightControl.lampOnRecord[LAMP_ON_RECORD_EMERGENCY].reason                 = "Emergency shut off";
-*/
 
         // If the light is on, log the sensor data before turning it off
         String emergencyData = "{\"emergencyOff\": {\"minimalDistanceMm\": " + String(lightControl.calculatedMinimalDistance) + "}}";
@@ -1305,207 +957,8 @@ void getSensorData(bool wifiStatus) {
 
     lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
 
-    /*
-    if (lightControl.uvLampMode == INT_UV_MODE_MANUAL)      {
-      //  if ((lightControl.uvLampMode == INT_UV_MODE_MANUAL) || (lightControl.uvLampMode == INT_UV_MODE_IDLE_MANUAL)  ) {
-        Serial.println("Minimal distance is MORE than 30cm, turning off the light");
-        lightControl.setLightState(true);  // Turn on the light
-        //lightControl.fEmergency =false;
-        }
-*/
-
   }  //end    else
 }  //end      void getSensorData(bool wifiStatus)
-
-
-
-
-
-/*
-void getSensorData(bool wifiStatus) {
-  //calculate lamp on time for logging
-  {
-    if (lightControl.lightOnTimeLastCheckMilliseconds == 0) {
-      lightControl.lightOnTimeLastCheckMilliseconds = millis();
-    }else{
-      uint32_t elapsedTime = millis() - lightControl.lightOnTimeLastCheckMilliseconds;
-      lightControl.lightOnTimeNotLoggedYetMilliseconds += elapsedTime;
-      if (lightControl.lightOnTimeNotLoggedYetMilliseconds >= LED_ON_LOG_INTERVAL) {
-        lightControl.lightOnTimeForLoggingInIntervalUnit += 1;
-        lightControl.eepromWriteLightOnData(lightControl.lightOnTimeForLoggingInIntervalUnit);
-        lightControl.lightOnTimeNotLoggedYetMilliseconds -= LED_ON_LOG_INTERVAL;
-      }
-      lightControl.lightOnTimeLastCheckMilliseconds = millis();
-    }
-  }
-
-  float temperatureFromTMP;
-
-  Serial.println("Fetching sensor data...");
-  lightControl.checkRadarData(false);
-
-  lightControl.checkThermalSensorData(true);
-  //lightControl.checkThermalSensorData(false);
-
-  lightControl.rtc.outputNowDateTime();     //currentRtcTime  = this->now();
-
-  temperatureFromTMP=lightControl.getTemperatureData();
-  Serial.print("Sensor temperature:");
-  Serial.println(temperatureFromTMP);
-
-  print_now();
-  print_second();
-
-
-  if (awsMqtt.initOtaJobTimeMessageUnixTime != 0) {
-    //update RTC time if the time difference between AWS message and RTC is more than 10 seconds
-    //The AWS time is based on the time when the job inquiry was received
-    uint32_t timeDiffFromAwsMessage = (uint32_t)(millis() - awsMqtt.initOtaJobTimeMessageMillis);
-    uint32_t currentUnixTimeWithAwsReference = awsMqtt.initOtaJobTimeMessageUnixTime + (timeDiffFromAwsMessage / 1000);
-    uint32_t currentUnixTimeRTC = lightControl.currentRtcTime.unixtime();
-    int32_t timeDiffAwsRtc = (int32_t)(currentUnixTimeWithAwsReference - currentUnixTimeRTC);
-    if (abs(timeDiffAwsRtc) > 10) {  // If the difference is more than 10 seconds
-      Serial.print("Time difference between AWS message and RTC is ");
-      Serial.print(timeDiffAwsRtc);
-      Serial.println(" seconds, resetting RTC to AWS time.");
-      DateTime awsDateTime(currentUnixTimeWithAwsReference);
-      lightControl.rtc.adjust(awsDateTime);  // Adjust RTC to AWS time
-      
-      lightControl.rtc.outputNowDateTime();     //currentRtcTime  = this->now();
-      //lightControl.getCurrentRtcTime();      // Update current RTC time
-    }
-    awsMqtt.initOtaJobTimeMessageUnixTime = 0;  // Reset after use
-  }
-
-  lightControl.get8hourSectionStartTime();
-  
-  bool fAnyObject=false;
-  fAnyObject = lightControl.processSensorInfo(true);
-  Serial.print("device detected at least one object:");Serial.println(fAnyObject);
-
-  Serial.print("Sensor minimal distance: ");
-  Serial.println(lightControl.calculatedMinimalDistance);
-
-  //Emergency shutoff if user appear in 1FT, 30cm
-  if ((lightControl.calculatedMinimalDistance < 300)) {
-    //if (((lightControl.uvLampMode == INT_UV_MODE_SMART) || (lightControl.uvLampMode == INT_UV_MODE_MANUAL) ||  (lightControl.uvLampMode == INT_UV_MODE_IDLE_MANUAL) )) {
-    if (((lightControl.uvLampMode == UV_MODE_SMART) || (lightControl.uvLampMode == UV_MODE_MANUAL))) {
-      Serial.println("Minimal distance is less than 30cm, turning off the light");
-      if (lightControl.getLightState()) {
-
-        lightControl.setLightState(false);  // Turn off the light
-            //lightControl.fEmergency = true;
-            lightControl.lampOnRecord[1].lampOnTimeStamps_start = lightControl.lampOnRecordCache.lampOnTimeStamps_start;
-            lightControl.lampOnRecord[1].lampOnTimeStamps_end   = lightControl.lampOnRecordCache.lampOnTimeStamps_end;
-            lightControl.lampOnRecord[1].length                 = lightControl.lampOnRecordCache.length;
-            lightControl.lampOnRecord[1].reason                 = "Emergency shut off";
-
-        // If the light is on, log the sensor data before turning it off
-        String emergencyData = "{\"emergencyOff\": {\"minimalDistanceMm\": " + String(lightControl.calculatedMinimalDistance) + "}}";
-        if (wifiStatus) {
-          awsMqtt.logSensorToServer((char *)emergencyData.c_str());
-          //sendLoggingAndTelemetryDataToServer();
-        }
-      }
-    }//end    if (((lightControl.uvLampMode == UV_MODE_SMART)
-  }else{
-    if (lightControl.uvLampMode == INT_UV_MODE_MANUAL)      {
-      //  if ((lightControl.uvLampMode == INT_UV_MODE_MANUAL) || (lightControl.uvLampMode == INT_UV_MODE_IDLE_MANUAL)  ) {
-        Serial.println("Minimal distance is MORE than 30cm, turning off the light");
-        lightControl.setLightState(true);  // Turn on the light
-        
-        //lightControl.fEmergency =false;
-
-        }
-  }//end    else
-}//end      void getSensorData(bool wifiStatus)
-*/
-
-
-/// @brief getSensorData will fetch the sensor data \n
-/// including radar, thermal sensor, temperature sensor, and RTC time \n
-/// also it will check if the time difference between AWS message and RTC is more than 10 seconds \n
-/// if so, it will reset the RTC to AWS time \n
-/// it will also use radar and thermal sensor data to calculate the minimal distance \n
-/// and turn off the light if the minimal distance is less than 30cm as a precaution \n
-/*
-void getSensorData(bool wifiStatus) {
-  //calculate lamp on time for logging
-  {
-    if (lightControl.lightOnTimeLastCheckMilliseconds == 0) {
-      lightControl.lightOnTimeLastCheckMilliseconds = millis();
-    }else{
-      uint32_t elapsedTime = millis() - lightControl.lightOnTimeLastCheckMilliseconds;
-      lightControl.lightOnTimeNotLoggedYetMilliseconds += elapsedTime;
-      if (lightControl.lightOnTimeNotLoggedYetMilliseconds >= LED_ON_LOG_INTERVAL) {
-        lightControl.lightOnTimeForLoggingInIntervalUnit += 1;
-        lightControl.eepromWriteLightOnData(lightControl.lightOnTimeForLoggingInIntervalUnit);
-        lightControl.lightOnTimeNotLoggedYetMilliseconds -= LED_ON_LOG_INTERVAL;
-      }
-      lightControl.lightOnTimeLastCheckMilliseconds = millis();
-    }
-  }
-
-float temperatureFromTMP;
-  Serial.println("Fetching sensor data...");
-  lightControl.checkRadarData(false);
-  lightControl.checkThermalSensorData(false);
-  lightControl.getTemperatureData();
-  lightControl.getCurrentRtcTime();
-
-temperatureFromTMP=lightControl.getTemperatureData();
-
-  //lightControl.getCurrentRtcTime();
-  print_now();
-  print_second();
-
-
-  if (awsMqtt.initOtaJobTimeMessageUnixTime != 0) {
-    //update RTC time if the time difference between AWS message and RTC is more than 10 seconds
-    //The AWS time is based on the time when the job inquiry was received
-    uint32_t timeDiffFromAwsMessage = (uint32_t)(millis() - awsMqtt.initOtaJobTimeMessageMillis);
-    uint32_t currentUnixTimeWithAwsReference = awsMqtt.initOtaJobTimeMessageUnixTime + (timeDiffFromAwsMessage / 1000);
-    uint32_t currentUnixTimeRTC = lightControl.currentRtcTime.unixtime();
-    int32_t timeDiffAwsRtc = (int32_t)(currentUnixTimeWithAwsReference - currentUnixTimeRTC);
-    if (abs(timeDiffAwsRtc) > 10) {  // If the difference is more than 10 seconds
-      Serial.print("Time difference between AWS message and RTC is ");
-      Serial.print(timeDiffAwsRtc);
-      Serial.println(" seconds, resetting RTC to AWS time.");
-      DateTime awsDateTime(currentUnixTimeWithAwsReference);
-      lightControl.rtc.adjust(awsDateTime);  // Adjust RTC to AWS time
-      lightControl.getCurrentRtcTime();      // Update current RTC time
-    }
-    awsMqtt.initOtaJobTimeMessageUnixTime = 0;  // Reset after use
-  }
-  lightControl.get8hourSectionStartTime();
-  lightControl.processSensorInfo(false);
-
-  Serial.print("Sensor minimal distance: ");
-  Serial.println(lightControl.calculatedMinimalDistance);
-
-  //Emergency shutoff if user appear in 1FT, 30cm
-  if ((lightControl.calculatedMinimalDistance < 300)) {
-    if (((lightControl.uvLampMode == UV_MODE_SMART) || (lightControl.uvLampMode == UV_MODE_MANUAL))) {
-      Serial.println("Minimal distance is less than 30cm, turning off the light");
-      if (lightControl.getLightState()) {
-        lightControl.setLightState(false);  // Turn off the light
-        // If the light is on, log the sensor data before turning it off
-        String emergencyData = "{\"emergencyOff\": {\"minimalDistanceMm\": " + String(lightControl.calculatedMinimalDistance) + "}}";
-        if (wifiStatus) {
-          awsMqtt.logSensorToServer((char *)emergencyData.c_str());
-          sendLoggingAndTelemetryDataToServer();
-        }
-      }
-    }
-  }else{
-    if ((lightControl.uvLampMode == UV_MODE_MANUAL)) {
-      lightControl.setLightState(true);  // Turn on the light
-    }
-  }
-}
-*/
-
-
 
 void sendLoggingAndTelemetryDataToServer() {
   // awsMqtt.logSensorToServer((char *)lightControl.getSensorDataJson().c_str());
@@ -1515,12 +968,6 @@ void sendLoggingAndTelemetryDataToServer() {
 
   int detectionMode = lightControl.uvLampMode;
   if (detectionMode == UV_MODE_OFF) { detectionMode = UV_MODE_MANUAL; }
-  /*
-  int detectionMode = 0;
-  if ((lightControl.uvLampMode == UV_MODE_MANUAL) || (lightControl.uvLampMode == UV_MODE_OFF)) {
-    detectionMode = 1;
-  }
-  */
 
   bool scheduleEnable = awsMqtt.scheduleEnabled;
   bool factoryReset = payload_manager.payload_command_sub.factoryReset;
@@ -1528,36 +975,20 @@ void sendLoggingAndTelemetryDataToServer() {
 
   int telemetryIntervalSeconds = awsMqtt.telemetryIntervalSeconds;
 
-  /*
-        Serial.println("-----------------Telemetry-------------------");
-        //  DateTime  dateTime            = lightControl.rtc.outputNowDateTime();
-        //lightControl.currentRtcTime   = dateTime;
-        //Serial.print("lightControl.currentRtcTime.unixtime():"); Serial.println(lightControl.currentRtcTime.unixtime());
-        uint32_t unixtime= lightControl.currentRtcTime.unixtime();
-          Serial.print("unixtime:");Serial.println(unixtime);
-*/
-
-
-
   uint8_t *scheduleData = payload_manager.payload_deviceConfig_sub.scheduleData;
   int timeZoneOffsetMinutes = payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes;
   char *firmwareVersion = __DATE__ " " __TIME__;
   int accumulatedExposure = lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
-  //int accumulatedExposure       = lightControl.eepromGetAccumulatedExposure(lightControl.inProgress8hourSectionStartTime);
   int personCount = lightControl.personCount;
   float temperaturCelsius = lightControl.temperatureData;
   char *lastCommandStatus = "success";
   uint8_t motionEvents = 0;
 
   int uptimeSeconds = (millis() - program_StartUpTime) / 1000;
-  //int   uptimeSeconds           = millis() -   program_StartUpTime;
-  //int   uptimeSeconds         = 0;
 
   uint32_t lastErrorTimestamp = payload_manager.payload_telemetry_pub.lastErrorTimestamp;
-  //  int   lastErrorTimestamp            = 0;    // what error is it
 
   char *sensorHealth = "ok";
-
 
   Serial.print("awsMqtt.scheduleEnabled____________________:");
   Serial.println(awsMqtt.scheduleEnabled);
@@ -1594,90 +1025,10 @@ void sendLoggingAndTelemetryDataToServer() {
                          ", \"error\": " + String(get_errorStatus()) +
                          //", \"error\": "                + "0"                                                            +
                          " }";
-  /*
-                        ",\"lampOnTimestamps\":{"  + String(lightControl.lampOnRecord_index) +       
-
-                        "[start:{"  +String(   (int)lightControl.lampOnRecord[2].lampOnTimeStamps_start )   + "}" +
-                        ",end{"  +String(lightControl.lampOnRecord[2].lampOnTimeStamps_end)     +"}"      +
-                        ",length:"  + String(lightControl.lampOnRecord[2].length,1 )  +"mins"             +
-                        ",reason:"  + "Hit 8 hr limit " +"mJ"         +"\"]"                               +
-
-                        "[start:{"  +String(   (int)lightControl.lampOnRecord[0].lampOnTimeStamps_start )   + "}" +
-                        ",end{"  +String(lightControl.lampOnRecord[0].lampOnTimeStamps_end)     +"}"      +
-                        ",length:"  + String(lightControl.lampOnRecord[0].length,1 )  +"mins"             +
-                        ",reason:"  + "Manual Mode shut off"     +"\"]"                      +
-   
-                        "[start:{"  +String(   (int)lightControl.lampOnRecord[1].lampOnTimeStamps_start )   + "}" +
-                        ",end{"  +String(lightControl.lampOnRecord[1].lampOnTimeStamps_end)     +"}"      +
-                        ",length:"  + String(lightControl.lampOnRecord[1].length,1 )  +"mins"             +
-                        ",reason:"  + "Emergency shut off"        +"\"]"                                  +
-                       "}"      
-
-
-                        +  "}"         +                        
-
-
-
-                        ", \"firmwareVersion\": \"0.0.0\", \"rtcUnixTime\":" + String((int)lightControl.rtc.outputNowUnixtime()) +
-                        ",accumulatedEnergyMJ:"+String(lightControl.accumulatedExposure)  +
-                        ",personCount:\""    +String(  lightControl.getpersonCount() )         +"+\""                           +
-                        ",temperatureCelsius:"+String(lightControl.temperatureData,0)                                           +
-                        ",lastCommandStatus:" +"\"success\"" +
-
-                        ",motIonEvents:" +String(lightControl.getmotionEvents())                                                +
-                        
-                        ",uptimeSeconds:" +String(uptimeSeconds)                                                                  +
-                        //",uptimeSeconds:" +String(86400)                                                                        +
-                        
-                        ",lastErrorTimestamp:" +  String(lastErrorTimestamp)                                                      +
-                        //",lastErrorTimestamp:" +  String(1693845000)                                                            +
-                        
-                        ",sensorHealth:\"" + String( lightControl.getsensorHealth() ? "ok":"fault") + "\""                           +
-                        //",sensorHealth:\"" + String( lightControl.sensorHealth ? "ok":"fault") + "\""                           +
-                        //",sensorHealth:\"" + "ok" +"\""                                                                         +
-                        
-                        ", \"error\": " +"0"+
-
-                        //String((int)lightControl.rtc.outputNowUnixtime()) +
-                         
-                        "}";
-*/
-
 
   awsMqtt.sendTelemetryToServer((char *)telemetryData.c_str());
-  //awsMqtt.logSensorToServer((char *)lightControl.getSensorDataJson().c_str());
   delay(100);
 }
-
-
-
-/*
-void sendLoggingAndTelemetryDataToServer() {
-  awsMqtt.logSensorToServer((char *)lightControl.getSensorDataJson().c_str());
-  bool occupied = (lightControl.calculatedMinimalDistance < 2000);  //consider occupied if someone is closer than 2 meters
-  bool lampStatus = lightControl.getLightState();
-  bool lampEnable = (lightControl.uvLampMode != UV_MODE_OFF);
-  int detectionMode = 0;
-  if ((lightControl.uvLampMode == UV_MODE_MANUAL) || (lightControl.uvLampMode == UV_MODE_OFF)) {
-    detectionMode = 1;
-  }
-  bool scheduleEnable = awsMqtt.scheduleEnabled;
-
-
-
-  String telemetryData = "{\"occupied\": " + String(occupied ? "true" : "false") +
-                        ", \"lampStatus\": " + String(lampStatus ? "true" : "false") +
-                        ", \"settings\": {\"lampEnable\": " + String(lampEnable ? "true" : "false") +
-                        ", \"detectionMode\": " + String(detectionMode) +
-                        ", \"scheduleEnable\": " + String(scheduleEnable ? "true" : "false") +
-                        "}" +
-                        ", \"firmwareVersion\": \"0.0.0\", \"errorCode\": 0, \"rtcUnixTime\": " +
-                        String(lightControl.currentRtcTime.unixtime()) + "}";
-  awsMqtt.sendTelemetryToServer((char *)telemetryData.c_str());
-  //awsMqtt.logSensorToServer((char *)lightControl.getSensorDataJson().c_str());
-}
-*/
-
 
 /// @brief loop is an Arduino function that is called repeatedly \n
 /// In this project, it checks the button activity, check sensor data, and handle WiFi connection. \n
@@ -1686,30 +1037,6 @@ void sendLoggingAndTelemetryDataToServer() {
 //static bool f_loop;
 
 void loop() {
-
-  /*
-{
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillis >= interval) {
-    // Time to perform the event
-    previousMillis = currentMillis; // Update the last time the event occurred
-
-        if(fToggle){
-          beacon_pcb.digitalWrite(PIN8, LOGIC_HIGH);
-//          beacon_pcb.digitalWrite(PIN12, LOGIC_HIGH);
-          }else{
-          beacon_pcb.digitalWrite(PIN8, LOGIC_LOW);          
-//          beacon_pcb.digitalWrite(PIN12, LOGIC_LOW);
-          }
-           fToggle = !fToggle; 
-
-    // Your event code goes here
-    // Example: Toggle an LED
-    // digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  }
-}
-*/
 
 
   {
@@ -1726,50 +1053,10 @@ void loop() {
       Serial.println(temperatureFromTMP);
     }
 
-    //beacon_pcb.fanControl(true, temperatureFromTMP,false);
     beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP, false);
   }
 
-  /*   
-   if(f_loop){
-        ioport.digitalWrite(PIN8, LOGIC_HIGH);
-   }else{
-      ioport.digitalWrite(PIN8, LOGIC_LOW);
-   }
-  f_loop= !f_loop;
-*/
-  //      ioport.digitalWrite(PIN8, LOGIC_HIGH);
-
-  {  //start of Fan control
-     /*
-    bool fcounter =  ( (gTimer0Counter &0x0008)==0x0008)? true:false;
-    //bool fcounter =  ( (gTimer0Counter &7)==7)? true:false;
-    Serial.print("gTimer0Counter &1:");
-    Serial.println(fcounter);
-    if( fcounter    ){
-      ioport.digitalWrite(PIN8, LOGIC_HIGH);
-    }else{
-      ioport.digitalWrite(PIN8, LOGIC_LOW);
-    }
-*/
-
-    /*
-    if( fcounter    )
-    {
-      uint8_t logic = fcounter ? LOGIC_HIGH:LOGIC_LOW;
-      ioport.digitalWrite(PIN8, logic);
-      //ioport.digitalWrite(PIN8, fcounter);
-      float temperatureFromTMP;
-      temperatureFromTMP = lightControl.getTemperatureData();
-      //beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP,false);
-      beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP,true);
-    }
-*/
-  }  //end of Fan control
-
-
   int buttonState = checkButtonActivity();
-  //if ((buttonState & (1<<3)) && ((buttonState & (1<<0))==0)){
   if ((buttonState & (1 << 0))) {
     Serial.println("Button short pressed_________________________________________________________________");
 
@@ -1777,7 +1064,6 @@ void loop() {
       //turn off the light if it is on
       Serial.println("Button switching UV lamp mode to OFF____________________________________________________");
 
-      //payload_manager.list_newModeCommand.push_back("UV_MODE_OFF");
       lightControl.uvLampMode = UV_MODE_OFF;
       lightControl.lightState = false;
 
@@ -1785,7 +1071,6 @@ void loop() {
       //turn on the light if it is off
       Serial.println("Button switching UV lamp mode to MANUAL__________________________________________________");
 
-      //payload_manager.list_newModeCommand.push_back("UV_MODE_MANUAL");
       lightControl.uvLampMode = INT_UV_MODE_MANUAL;
       lightControl.lightState = true;
     }
@@ -1799,15 +1084,7 @@ void loop() {
 
     Serial.println("Button long pressed");
     resetWifi();
-    /*
-    NonvolatileDataManager::eraseSsidPasswordFromFlash();
-    lightControl.setUiLedState(UI_LED_BLUE, UI_LED_BLINK);
-    lightControl.setUiLedState(UI_LED_RED, UI_LED_BLINK); 
-    delay(1000);
 
-    sys_reset();
-    while(1);
-*/
   }
 
   fetchWifiSetting();
@@ -1826,11 +1103,6 @@ void loop() {
   }
   if (wifiWasConnected != wifiConnected) {
     if (wifiConnected) {
-
-      //    lightControl.setUiLedState(UI_LED_BLUE, UI_LED_BLINK);
-
-
-      //      lightControl.setUiLedState(UI_LED_BLUE, UI_LED_ON);
 
       lastWifiTryConnectTime = 0;
       Serial.println("WiFi connected");
@@ -1873,12 +1145,10 @@ void loop() {
     }
   } else {
     if (wifiConnected) {
-      //      lightControl.setUiLedState(UI_LED_BLUE, UI_LED_ON);
 
       lastWifiConnectedTime = millis();
 
       awsMqtt.loop();
-
 
       if (awsMqtt.fConnectingMqtt) {
         lightControl.setUiLedState(UI_LED_BLUE, UI_LED_BLINK);
@@ -1892,7 +1162,6 @@ void loop() {
         lightControl.setUiLedState(UI_LED_BLUE, UI_LED_OFF);
         if (!bleAdvertisingForWifiConfig) {
           Serial.println("BLE advertising for wifi config started");
-          //BLE.configAdvert()->startAdv();
 
           esp32Provision = new ESP32Provision();
           esp32Provision->begin();
@@ -1989,12 +1258,6 @@ void loop() {
         } else {
           beacon_pcb.digitalWrite(PIN8, LOGIC_LOW);
           action_diagnosticlevel_print(wifiConnected, diagnosticlevel, false);
-          //      action_diagnosticlevel( wifiConnected ,  diagnosticlevel);
-
-          // if (wifiConnected) {
-          // sendLoggingAndTelemetryDataToServer();
-          // }//end      if (wifiConnected)
-
         }  //end else
 
         fToggle = !fToggle;
@@ -2003,48 +1266,6 @@ void loop() {
 
       }  //end  if (currentMillis - previousMillis >= interval)
     }    //end
-
-
-    /*  
-{
-  unsigned long currentMillis = millis();
-  interval = (unsigned long)( awsMqtt.telemetryIntervalSeconds *1000    );
-  if(interval==0){ interval=1000;}
-
-Serial.println("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-uint8_t diagnosticlevel = payload_manager.payload_deviceConfig_sub.diagnosticsLevel;
-
-Serial.print("diagnosticlevel:");Serial.println( payload_manager.payload_deviceConfig_sub.diagnosticsLevel   );
-Serial.print("currentMillis");Serial.println(currentMillis);
-Serial.print("previousMillis");Serial.println(previousMillis);
-Serial.print("interval");Serial.println(interval);
-
-
-  if (currentMillis - previousMillis >= interval) {
-    // Time to perform the event
-    previousMillis = currentMillis; // Update the last time the event occurred
-
-        if(fToggle){
-          beacon_pcb.digitalWrite(PIN8, LOGIC_HIGH);
-
-              if (wifiConnected) {
-              sendLoggingAndTelemetryDataToServer();
-              }//end      if (wifiConnected)
-
-          }else{
-          beacon_pcb.digitalWrite(PIN8, LOGIC_LOW); 
-              if (wifiConnected) {
-              sendLoggingAndTelemetryDataToServer();
-              }//end      if (wifiConnected)
-          }
-           fToggle = !fToggle; 
-
-    // Your event code goes here
-    // Example: Toggle an LED
-    // digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  }
-}
-*/
 
     {
 
@@ -2076,20 +1297,6 @@ Serial.print("interval");Serial.println(interval);
           Serial.println(timestamp);
         }
 
-
-
-
-        /*
-        DateTime   dateTime           = lightControl.rtc.now();
-        lightControl.currentRtcTime   = dateTime;
-        Serial.print("lightControl.currentRtcTime.unixtime():"); Serial.println(lightControl.currentRtcTime.unixtime());
-        int timeDiff = (int)(lightControl.currentRtcTime.unixtime() - lightControl.inProgress8hourSectionStartTime);
-        int timeDiffMinutes = timeDiff / 60;
-        Serial.print("timeDiffMinutes:");         Serial.println(timeDiffMinutes);
-        Serial.print("processedMinutesCount");    Serial.println(lightControl.processedMinutesCount);
-*/
-
-
         DateTime dateTime = lightControl.rtc.outputNowDateTime();
         lightControl.currentRtcTime = dateTime;
         Serial.print("lightControl.currentRtcTime.unixtime():");
@@ -2106,22 +1313,6 @@ Serial.print("interval");Serial.println(interval);
         if (timeDiffMinutes > lightControl.processedMinutesCount) {
           Serial.println("________________________________________________________  60 sec ____________________________________________________");
 
-          /*
-      {
-        
-        bool scheduleInEffect;
-        scheduleInEffect = lightControl.getscheduleInEffect(awsMqtt.scheduleData,true);
-        
-        Serial.print("awsMqtt.scheduleEnabled:");Serial.println( awsMqtt.scheduleEnabled );
-        //Serial.print("awsMqtt.scheduleEnabled:");Serial.println( awsMqtt.scheduleEnabled?"EN":"SCHEDULE DIS");
-        Serial.print("dayOfTheWeek:");Serial.println(lightControl.currentRtcTime.dayOfTheWeek());  
-        Serial.print("hour:");Serial.println(lightControl.currentRtcTime.hour());
-        Serial.print("minute:");Serial.println(lightControl.currentRtcTime.minute());
-        Serial.print("scheduleInEffect:");Serial.println(scheduleInEffect);
-        //Serial.print("scheduleInEffect:");Serial.println(scheduleInEffect?"EN":"DIS");
-      } 
-      */
-
           {
             lightControl.thermalSensorValid = lightControl.thermalSensor.begin(MLX90640_I2CADDR_DEFAULT);  // MLX90640 I2C address,
 
@@ -2136,18 +1327,15 @@ Serial.print("interval");Serial.println(interval);
 
           //update the accumulated exposure
           lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
-          //lightControl.eepromGetAccumulatedExposure(lightControl.inProgress8hourSectionStartTime);
 
           lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
 
           if (lightControl.getLightState()) {
             int accumulatedExposureThisMinute = lightControl.minimalDistanceJulesLevel;
             lightControl.eepromWrite16LevelSection(lightControl.inProgress8hourSectionStartTime, accumulatedExposureThisMinute, lightControl.processedMinutesCount);
-            //lightControl.eepromWriteSection(lightControl.inProgress8hourSectionStartTime, accumulatedExposureThisMinute, lightControl.processedMinutesCount);
           }
 
           int accumulatedExposure = lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
-          //int accumulatedExposure = lightControl.eepromGetAccumulatedExposure(lightControl.inProgress8hourSectionStartTime);
 
           if (false) {
             Serial.println("_______________________ Accumulated exposure for section  ________________________________________");
@@ -2186,8 +1374,6 @@ Serial.print("interval");Serial.println(interval);
   }        //end    else
 
   processAwsMqtt_print(false);
-  //  processAwsMqtt_print(true);
-  //processAwsMqtt();
   wifiWasConnected = wifiConnected;
   wdt.RefreshWatchdog();
 }  //end void loop()
