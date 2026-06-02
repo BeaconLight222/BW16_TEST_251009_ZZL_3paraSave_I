@@ -1073,7 +1073,7 @@ void loop() {
 
   } else if (buttonState & (1 << 1)) {
 
-    Serial.println("Button long pressed");
+    Serial.println("Button long pressed_________________________________________________________________");
     resetWifi();
 
   }
