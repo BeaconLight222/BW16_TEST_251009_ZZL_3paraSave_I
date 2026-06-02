@@ -4,8 +4,6 @@
 /// @file LightLogicControl.cpp
 /// @brief Light logic control for the BW16 project, also manages radar, thermal sensor, temperature sensor, RTC, and EEPROM interactions.
 
-
-
 #include "EnergyEngineer.h"
 #include "payload.h"
 //#include "ioExpander.h"
@@ -19,12 +17,8 @@ extern EnergyEngineer beaconEnergyEngineer;
 extern uint32_t program_StartUpTime;
 extern BEACON_PCB beacon_pcb;
 extern PAYLOAD_MANAGER payload_manager;
-//extern IO_PCA9539 ioport;
-
 
 const char compiledTimeStr[] = __DATE__ " " __TIME__;
-
-
 
 /// @brief Exposure levels in micro Joules per minute, divided into 4 intensity levels.
 const int exposureLevelToJules[4] = {
@@ -59,9 +53,6 @@ extern AwsMqtt awsMqtt;
 volatile int gTimer0Counter = 0;
 volatile int gTimer0LedState = 0;
 
-
-
-
 void LightLogicControl::turnOffandRecord() {
   setLightState(false);  // Turn off the light
   lampOnRecord[LAMP_ON_RECORD_EMERGENCY].lampOnTimeStamps_start = lampOnRecordCache.lampOnTimeStamps_start;
@@ -71,8 +62,6 @@ void LightLogicControl::turnOffandRecord() {
 
 }  //end    void    LightLogicControl::turnOffandRecord()
 
-
-
 void LightLogicControl::setDetectionModeEeprom() {
   int _uvLampMode = uvLampMode;
   uint8_t byteData[4] = { 0 };
@@ -81,34 +70,8 @@ void LightLogicControl::setDetectionModeEeprom() {
   Serial.println(uvLampMode);
   //Serial.print("Before write uvLampMode:");Serial.println(byteData);
   eeprom.write(EEPROM_UV_LAMP_MODE, byteData, sizeof(byteData));
-
-
-
-
-  //if(true){ //verify the uvLampMode in eeprom
   getUvLampModeEeprom();
-  //        }//end    if(true){ //verify
 }  //end  void    LightLogicControl::setDetectionModeEeprom
-
-/*
-int       setLongWordEeprom(uint16_t memAddress, uint32_t longData);
-
-{   //start of block of write      uvLampMode  into eeprom, ie detectionMode
-          int uvLampMode = lightControl.uvLampMode;
-          uint8_t  byteData[4]={0};
-          memcpy(byteData,&uvLampMode,sizeof(uvLampMode));
-          lightControl.eeprom.write( EEPROM_UV_LAMP_MODE, byteData, sizeof(byteData)  );
-
-          if(true){ //verify the uvLampMode in eeprom
-           lightControl.getUvLampModeEeprom();
-       
-          }//end    if(true){ //verify
-
-} // end of block of write      uvLampMode  into eeprom, ie detectionMode
-*/
-
-
-
 
 /*
 * Function :
@@ -157,8 +120,6 @@ int LightLogicControl::getUvLampModeEeprom()
   return uvLampMode;
 }  //end
 
-
-
 uint32_t LightLogicControl::getLongWordEeprom(uint16_t memAddress) {
   uint8_t byteData[4] = { 0 };
 
@@ -181,10 +142,6 @@ uint32_t LightLogicControl::getLongWordEeprom(uint16_t memAddress) {
   return longWordResult;
 }  //end      uint32_t    getLongWordEeprom
 
-
-
-
-
 int LightLogicControl::setLongWordEeprom(uint16_t memAddress, uint32_t longData) {
   uint8_t byteData[4];
 
@@ -202,9 +159,6 @@ int LightLogicControl::setLongWordEeprom(uint16_t memAddress, uint32_t longData)
   int ret = eeprom.write(memAddress, byteData, sizeof(byteData));
   return ret;
 }  //end    void    LightLogicControl::eepromWriteLong
-
-
-
 
 bool LightLogicControl::getBitEeprom(int memAddress, uint8_t bit_position) {
   bool fResult;
@@ -227,27 +181,6 @@ bool LightLogicControl::getBitEeprom(int memAddress, uint8_t bit_position) {
   return fResult;
 
 }  //end    bool     LightLogicControl::getBitEeprom
-
-
-/*
-bool     LightLogicControl::getBitEeprom(int memAddress, uint8_t bit_position){
-    uint8_t   status=0x00;
-    bool fResult;
-
-    int ret = eeprom.read( memAddress, &status, sizeof(status));
-    if (ret < 0) {
-      Serial.print("Failed to read EEPROM at address ");
-      Serial.println(memAddress);
-      return -1; // Return -1 on read failure
-    }
-          
-    status  &=  (uint8_t)(1<<bit_position); 
-    fResult =   ( status !=0 )? true:false;
-
-    return    fResult;
-}//end   bool     LightLogicControl::getBitEeprom 
-*/
-
 
 int LightLogicControl::clrBitEeprom(int memAddress, uint8_t bit_position) {
   uint8_t status = 0x00;
@@ -296,16 +229,7 @@ int LightLogicControl::setBitEeprom(int memAddress, uint8_t bit_position) {
     return -1;  // Return -1 on write failure
   }
   return ret;
-  /*
-ret = eeprom.write(readAddress, &julesData, sizeof(julesData));
-  if (ret < 0) {
-    Serial.print("Failed to write EEPROM at address ");
-    Serial.println(readAddress);
-    return -1; // Return -1 on write failure
-  }
-*/
 }  //end      void      LightLogicControl::setEeprom
-
 
 bool LightLogicControl::getsensorHealth_print(bool fprint) {
   bool _sensorHealth = false;
@@ -335,8 +259,6 @@ bool LightLogicControl::getsensorHealth_print(bool fprint) {
   return sensorHealth;
 
 }  //end  bool      LightLogicControl::getsensorHealth_print
-
-
 
 bool LightLogicControl::getsensorHealth() {
   bool _sensorHealth = false;
@@ -396,39 +318,12 @@ int LightLogicControl::getpersonCount() {
   return personCount;
 }  //end    int   LightLogicControl::getpersonCount()
 
-
-
 /// @brief Timer interrupt handler for LED blinking
 void gTimer0handler(uint32_t data) {
 
   //(void)data;
   gTimer0Counter++;
   int toggleCounter = ~(gTimer0Counter);
-
-  /*
-    gf_loop =  ( (gTimer0Counter &0x0008)==0x0008)? true:false;
-    if(gf_loop ){
-    ioport.digitalWrite(PIN8, LOGIC_HIGH);
-}else{
-    ioport.digitalWrite(PIN8, LOGIC_LOW);
-}
-*/
-
-  //    gf_loop =  ( (gTimer0Counter &8)==8)? true:false;
-
-
-  /*
-bool fcounter =  ( (gTimer0Counter &1)==1)? true:false;
-    Serial.print("gTimer0Counter &1:");
-    Serial.println(fcounter);
-    if( fcounter    ){
-      ioport.digitalWrite(PIN8, LOGIC_HIGH);
-    }else{
-      ioport.digitalWrite(PIN8, LOGIC_LOW);
-    }
-*/
-
-
 
   int redLedState = gTimer0LedState & (3 << GTIMER0LEDSTATE_RED_LED_LOCATION);
   //  int redLedState = gTimer0LedState & (3 << 4);
@@ -530,16 +425,7 @@ void LightLogicControl::begin() {
   getUvLampModeEeprom();
   getScheduleEnableEeprom();
 
-  //getScheduleStrTad_print(false);
-  //getScheduleStrTad();
-  //getScheduleStr();
-
-
 }  //end      void LightLogicControl::begin
-
-
-
-
 
 String LightLogicControl::getScheduleStrAll_print(bool fprint, bool fSchedule) {
   //(lightState? true :false)
@@ -612,78 +498,6 @@ String LightLogicControl::getScheduleStrAll_print(bool fprint, bool fSchedule) {
 
 }  //end      String LightLogicControl::getScheduleStrAll_print
 
-
-
-
-
-/*
-* Function : set or clear all schedule (336 bit) 7 days (0.5day)
-* input   fSchedule: all set 1 or all clear 0
-*/
-/*
-String LightLogicControl::getScheduleStrAll_print(bool fprint, bool fSchedule){
-  //(lightState? true :false)
-  for (int i;i<42;i++){
-        payload_manager.payload_deviceConfig_sub.scheduleData[i] =  fSchedule? 0xff:0x00;
-  }
-  
-  if(fprint)
-    {
-      Serial.println(" payload_manager.payload_deviceConfig_sub.scheduleData:");
-      for(int i=0;i<42;i++){
-        Serial.print( payload_manager.payload_deviceConfig_sub.scheduleData[i]  );Serial.print(" ");
-        if(i%8==0){Serial.println(" ");}
-      }
-      Serial.println("");
-    }//end    if(fprint)
-
-  uint8_t  scheduleData[42]={0};  
-
-  int dataByteLength = EEPROM_SCHEDULE_SIZE; 
-  String textData = "";
-  textData.reserve(dataByteLength *16);   //8bit +8comma 
-
-  for(int i=0;i<42; i++){
-    scheduleData[i]= payload_manager.payload_deviceConfig_sub.scheduleData[i];
-  }
-
-  uint8_t temp;
-  
-  for(uint8_t   x=0 ;x<42 ;x++){
-    for(uint8_t y=0 ;y<8  ;y++ ){
-               temp =     scheduleData[x] & (1<<y);
-
-              if(x==41 && y==7){
-                        if(temp == 0){ 
-                          textData = textData +'0';
-                        }
-                        else         { 
-                          textData = textData + '1';
-                        }
-              }else{
-                        if(temp == 0){ 
-                          textData = textData +'0'+',';
-                        }
-                        else         { 
-                          textData = textData + '1'+',';
-                        }
-
-              }//end    if(x==41 && y==7)
-
-    }//end  for(uint8_t y=0
-  }//end    for(uint8_t   x=0
-
-  ScheduleStr = textData;
-
-  if(fprint){
-  Serial.print("ScheduleStr:");Serial.println(ScheduleStr);
-  }//end    if(fprint)
-
-  return    ScheduleStr;
-
-}//end      String LightLogicControl::getScheduleStrAll_print
-*/
-
 /*
 * Function:
 * 1) read schedule from eeprom into the local-buffer scheduleData[42]
@@ -723,8 +537,6 @@ String LightLogicControl::getScheduleStrTad_print(bool fprint) {
     awsMqtt.scheduleData[i] = scheduleData[i];
   }
 
-
-
   if (fprint) {
     Serial.println("AFTER:payload_deviceConfig_sub.scheduleData[i]:");
     for (int i = 0; i < 42; i++) {
@@ -740,9 +552,6 @@ String LightLogicControl::getScheduleStrTad_print(bool fprint) {
     }
     Serial.println("");
   }  //end      if(fprintf)
-
-
-
 
   int dataByteLength = EEPROM_SCHEDULE_SIZE;
   String textData = "";
@@ -785,80 +594,6 @@ String LightLogicControl::getScheduleStrTad_print(bool fprint) {
 
 }  //end    String LightLogicControl::getScheduleStrTad_print
 
-
-
-/*
-String LightLogicControl::getScheduleStrTad_print(bool fprint){
-  if(fprint)
-    {
-      Serial.println("LightLogicControl::getScheduleStrTad:");
-      for(int i=0;i<42;i++){
-        Serial.print( payload_manager.payload_deviceConfig_sub.scheduleData[i]  );Serial.print(" ");
-      }
-      Serial.println("");
-    }
-
-  uint8_t  scheduleData[42]={0};
-  int ret = eeprom.read(EEPROM_SCHEDULE_START_ADDRESS,scheduleData,sizeof(scheduleData));
-    if (ret < 0) {
-    Serial.print("Failed to read EEPROM at address ");
-    Serial.println(EEPROM_SCHEDULE_START_ADDRESS);
-    return ""; // Return empty string on read failure
-  }
-
-
-  if(fprintf){
-      Serial.println("eeprom.read:");
-      for(  int i=0;i<42;i++  ){
-        Serial.print(scheduleData[i],HEX);Serial.print(" ");
-      }
-      Serial.println("");
-  }//end      if(fprintf)
-
-  int dataByteLength = EEPROM_SCHEDULE_SIZE; 
-  String textData = "";
-  textData.reserve(dataByteLength *16);   //8bit +8comma 
-
- bool flag;
- uint8_t temp;
-
-  for(uint8_t   x=0 ;x<42 ;x++){
-    for(uint8_t y=0 ;y<8  ;y++ ){
-               temp =     scheduleData[x] & (1<<y);
-
-              if(x==41 && y==7){
-                        if(temp == 0){ 
-                          textData = textData +'0';
-                        }
-                        else         { 
-                          textData = textData + '1';
-                        }
-              }else{
-                        if(temp == 0){ 
-                          textData = textData +'0'+',';
-                        }
-                        else         { 
-                          textData = textData + '1'+',';
-                        }
-
-              }//end    if(x==41 && y==7)
-
-    }//end  for(uint8_t y=0
-  }//end    for(uint8_t   x=0
-
-
-  ScheduleStr = textData;
-
-  if(fprint){
-  Serial.print("ScheduleStr:");Serial.println(ScheduleStr);
-  }//end    if(fprint)
-
-  return    ScheduleStr;
-
-}//end    String LightLogicControl::getScheduleStrTad_print
-*/
-
-
 String LightLogicControl::getScheduleStrTad() {
   Serial.println("LightLogicControl::getScheduleStrTad:");
   for (int i = 0; i < 42; i++) {
@@ -866,10 +601,6 @@ String LightLogicControl::getScheduleStrTad() {
     Serial.print(" ");
   }
   Serial.println("");
-  /*
-uint8_t startLogTime[4] = {0}; // Initialize data to zero
-    int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
-*/
 
   uint8_t scheduleData[42] = { 0 };
 
@@ -886,7 +617,6 @@ uint8_t startLogTime[4] = {0}; // Initialize data to zero
     Serial.print(" ");
   }
   Serial.println("");
-
 
   int dataByteLength = EEPROM_SCHEDULE_SIZE;
   String textData = "";
@@ -917,34 +647,12 @@ uint8_t startLogTime[4] = {0}; // Initialize data to zero
     }  //end  for(uint8_t y=0
   }    //end    for(uint8_t   x=0
 
-
-  /*
-  for(uint8_t   x=0 ;x<42 ;x++){
-    for(uint8_t y=0 ;y<8  ;y++ ){
-               temp =     scheduleData[x] & (1<<y);
-
-               if(temp == 0){ 
-                textData = textData +'0'+',';
-                //flag =false;  
-                }
-               else         { 
-                textData = textData + '1'+',';
-                //flag = true;  
-                }
-
-    }//end  for(uint8_t y=0
-  }//end    for(uint8_t   x=0
-*/
-
   ScheduleStr = textData;
   Serial.print("ScheduleStr:");
   Serial.println(ScheduleStr);
   return ScheduleStr;
 
 }  //end    String LightLogicControl::getScheduleStrTad
-
-
-
 
 String LightLogicControl::getScheduleStr() {
   Serial.println("LightLogicControl::getScheduleStr:");
@@ -953,10 +661,6 @@ String LightLogicControl::getScheduleStr() {
     Serial.print(" ");
   }
   Serial.println("");
-  /*
-uint8_t startLogTime[4] = {0}; // Initialize data to zero
-    int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
-*/
 
   uint8_t scheduleData[42] = { 0 };
   int ret = eeprom.read(EEPROM_SCHEDULE_START_ADDRESS, scheduleData, sizeof(scheduleData));
@@ -1001,55 +705,6 @@ uint8_t startLogTime[4] = {0}; // Initialize data to zero
   return ScheduleStr;
 
 }  //end
-
-
-/*
-String LightLogicControl::eepromGetSchedule(){
-  if (!eepromValid) {
-    Serial.println("EEPROM is not valid, skipping section read.");
-    return ""; // Return empty string if EEPROM is not valid
-  }
-
-  uint8_t allSchedule[EEPROM_SCHEDULE_SIZE] = {0}; // Initialize data to zero
-  int ret = eeprom.read(EEPROM_SCHEDULE_START_ADDRESS , allSchedule, sizeof(allSchedule));
-
-  if (ret < 0) {
-    Serial.print("Failed to read EEPROM at address ");
-    Serial.println(EEPROM_SCHEDULE_START_ADDRESS);
-    return ""; // Return empty string on read failure
-  }
-
-  int dataByteLength = EEPROM_SCHEDULE_SIZE; 
-  String textData = "";
-  textData.reserve(dataByteLength *2); // eg 0xc1 become 'C'+‘1'; this is two byte now
-
-  //String data =      "\"schedule\":[";
-  
-  for (int i = 0; i < EEPROM_SCHEDULE_SIZE; i++ ) {
-    uint8_t scheduleData = allSchedule[i];
-    // convert julesData to padded hex string
-    char hexHigh = (scheduleData >> 4) + '0';
-    if (hexHigh > '9') {
-      hexHigh += 7; // Convert to A-F
-    }
-    char hexLow = (scheduleData & 0x0F) + '0';
-    if (hexLow > '9') {
-      hexLow += 7; // Convert to A-F
-    }
-    textData += hexHigh;
-    textData += hexLow;
-    textData += " ";
-  }
-
-  return textData;
-}//end  String LightLogicControl::eepromGetSchedule  
-
-
-
-
-*/
-
-
 
 /// @brief setup the periodic light process timer
 void LightLogicControl::startPeriodicLightProcess() {
@@ -1115,7 +770,6 @@ void LightLogicControl::checkRadarData(bool printData) {
 
   if (radar2Valid) {
     radar2.activeSerialMux();
-    // radar2.enableRadarStreaming();
     int radarNewdata = radar2.checkRadarData(200);
     if (radarNewdata) {
       if (printData) {
@@ -1171,13 +825,6 @@ void LightLogicControl::initThermalSensor() {
       thermalSensor.getFrame(frame);
       // discard first 2 frames
     }
-
-    // if (initMLX90640YoloProcessor()==0) {
-    //     //Serial.println("MLX90640 Yolo Processor initialized successfully");
-
-    // } else {
-    //     Serial.println("Failed to initialize MLX90640 Yolo Processor");
-    // }
   } else {
     Serial.println("Thermal sensor initialization failed");
   }
@@ -1189,11 +836,7 @@ void LightLogicControl::checkThermalSensorData(bool printData) {
   if (thermalSensorValid) {
     float frame[32 * 24];
 
-    //Serial.println("_______________________ BEFORE  thermalSensor.getFrame(frame)  ________________________________________");
-    //   int ret =0;
     int ret = thermalSensor.getFrame(frame);
-    //Serial.println("_______________________ AFTER  thermalSensor.getFrame(frame)  ________________________________________");
-
 
     if (ret == 0) {
       if (printData) {
@@ -1258,67 +901,15 @@ float LightLogicControl::getlength(uint32_t startTime, uint32_t endTime) {
       Serial.println(_length);
     }
     lampOnRecordCache.length = _length;
-    // lampOnRecord[ 0 ].length =_length;
-    //lampOnRecord[ lampOnRecord_index ].length =_length;
   }
 
   return _length;
 
 }  //end    uint32_t    LightLogicControl::length
 
-
-
-/*
-float    LightLogicControl::length(uint32_t startTime, uint32_t endTime){
-float _length=0;
-
-if( ((endTime>startTime) && (startTime>0) && (endTime>0))  ||(  (endTime==0) && (startTime>0)     )  ){
-//if( (endTime>startTime) && (startTime>0) && (endTime>0) ){
-
-  _length=(float)(  endTime - startTime )/60;
-  if( _length < 0 )  {
-  _length=0;
-  }
-  Serial.print("startTime:");Serial.println(startTime);
-  Serial.print("endTime:")  ;Serial.println(endTime);
-  Serial.print("_length:")  ;Serial.println(_length);
- // lampOnRecord[ 0 ].length =_length;
-//lampOnRecord[ lampOnRecord_index ].length =_length;
-
-
-}
-
-return    _length;
-
-}//end    uint32_t    LightLogicControl::length
-*/
-
-
-/*
-int    LightLogicControl::length(uint32_t startTime, uint32_t endTime){
-int _length=0;
-
-_length=(int)(  endTime - startTime );
-if( _length < 0 )  {
-_length=0;
-}
-
-lampOnRecord[ lampOnRecord_index ].length =_length;
-
-return    _length;
-}//end    uint32_t    LightLogicControl::length
-*/
-
-
 #define UNDEFINED 255
 #define UV_LAMP_ON 1
 #define UV_LAMP_OFF 0
-
-
-
-
-
-
 
 void LightLogicControl::setLightState(bool state) {
 
@@ -1326,13 +917,6 @@ void LightLogicControl::setLightState(bool state) {
 
   {
     uint32_t currentUixTime = this->currentRtcTime.unixtime();
-
-    /*
-DateTime  dateTime            = rtc.now();
-          currentRtcTime      = dateTime;                                
-uint32_t  currentUixTime      = currentRtcTime.unixtime() ;
-Serial.print("currentUixTime:");Serial.println(currentUixTime);
-*/
 
     if (state) {
 
@@ -1343,8 +927,6 @@ Serial.print("currentUixTime:");Serial.println(currentUixTime);
         lampOnRecordCache.lampOnTimeStamps_end = currentUixTime;
         lampOnRecordCache.length = 0;
         lampOnRecordCache.reason = "trigger turn on";
-        //    Serial.print("state:TRUE, lampOnTimeStamps_start"); Serial.println(lampOnRecordCache.lampOnTimeStamps_start);
-        //    Serial.print("state:TRUE, lampOnTimeStamps_end");Serial.println(lampOnRecordCache.lampOnTimeStamps_end);
       }  //end if
 
 
@@ -1358,24 +940,11 @@ Serial.print("currentUixTime:");Serial.println(currentUixTime);
         lampOnRecordCache.length = (getlength(lampOnRecordCache.lampOnTimeStamps_start, lampOnRecordCache.lampOnTimeStamps_end));
         lampOnRecordCache.reason = "turn off for any reason";
 
-        //Serial.print("state:FALSE:lampOnRecordCache.lampOnTimeStamps_start");Serial.println(lampOnRecordCache.lampOnTimeStamps_start);
-        //Serial.print("state:FALSE:lampOnRecordCache.lampOnTimeStamps_end")  ;Serial.println(lampOnRecordCache.lampOnTimeStamps_end);
-
       }  //end      if(fSetStartTime)
-
-
-
 
     }  //end else
   }
 
-  /*
-{
-  uint8_t data = UNDEFINED;
-  data= state? UV_LAMP_ON:UV_LAMP_OFF;
-  this->eeprom.write(EEPROM_LAMP_CURRENT_STATE_ADDRESS, &data, sizeof(data));
-}
-*/
   if (true) {
     Serial.print("UI_LED_WHITE:");
     Serial.println(UI_LED_WHITE);
@@ -1390,44 +959,11 @@ Serial.print("currentUixTime:");Serial.println(currentUixTime);
 
 }  //end  void LightLogicControl::setLightState
 
-
-
-/*
-void LightLogicControl::setLightState(bool state) {
-  lightState = state;
-
-  setUiLedState(UI_LED_WHITE, lightState ? UI_LED_ON : UI_LED_OFF);
-
-  digitalWrite(PA12, lightState ? LOW : HIGH); // ballast on when Low
-
-//  ioport.fanControl(lightState);
-float temperatureFromTMP;
-temperatureFromTMP = getTemperatureData();
-//temperatureFromTMP = 39.9;
-//temperatureFromTMP = 40.1;
-Serial.print("LightLogicControl::Sensor TMP temperature:");
-  Serial.println(temperatureFromTMP);
-
-  if(lightState || (temperatureFromTMP>40) ){
-  ioport.fanOn();
-  }else{
-  ioport.fanOff();
-  }
-
-}//end  void
-*/
-
-
 bool LightLogicControl::getLightState() {
   return lightState;
 }
 
-
 #define DETECT_DISTANCE_OFFSET 50  // measure a farther distance, so we need to minus this offset
-
-
-
-
 
 /// @brief Use sensor data to calculate the minimal distance and jules level
 /// @param printData Whether to print the sensor data in serial monitor
@@ -1553,195 +1089,6 @@ int LightLogicControl::processSensorInfo(bool printData) {
       minimalDistance = (r1_min + r2_min)/2;
   }
 
-  
-
-
-
-  if (thermalSensorValid && thermalDetectionCount > 0) {
-    for (int i = 0; i < thermalDetectionCount; i++) {
-      int distance = 0;
-      float w = thermalDetections[i].w;
-      float h = thermalDetections[i].h;
-      float area = w * h;
-      if (area > 50) {
-        distance = 900;
-      } else if (area > 20) {
-        distance = 2400;
-      } else {
-        distance = 3000;  // No really detection
-      }
-      thermalDetections[i].distance = distance;
-
-      Serial.print("thermal object");
-      Serial.print(i);
-      Serial.print(" distance:");
-      Serial.println(distance);
-      if (distance < minimalDistance) {
-        minimalDistance = distance;
-      }
-    }
-  }
-
-  if (printData) {
-    Serial.print("Temperature: ");
-    String temperatureDataStr =
-      String(temperatureData, 2);  // Format to 2 decimal places
-    Serial.print(temperatureDataStr);
-    Serial.println(" °C");
-  }
-
-
-  
-
-
-  if ((radar1Valid && radar1.radarObjectCount > 0) || (radar2Valid && radar2.radarObjectCount > 0) || (thermalSensorValid && thermalDetectionCount > 0)) {
-
-    calculatedMinimalDistance = minimalDistance - DETECT_DISTANCE_OFFSET;
-    //  calculatedMinimalDistance = minimalDistance-50;
-    //  calculatedMinimalDistance = minimalDistance;
-
-    if (calculatedMinimalDistance < 0) {
-      calculatedMinimalDistance = 0;
-    }
-  }
-
-  minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(calculatedMinimalDistance);
-  //  minimalDistanceJulesLevel = julesLevelForDistance(calculatedMinimalDistance);
-
-
-  if (printData) {
-    Serial.println("_____________________________________ Jules _______________________________________");
-    Serial.print("Minimal distance: ");
-    Serial.println(calculatedMinimalDistance);
-    Serial.print("Minimal distance in Jules Level: ");
-    Serial.print(minimalDistanceJulesLevel);
-    Serial.print(", Jules: ");
-    Serial.println(exposure16LevelToJules[minimalDistanceJulesLevel]);
-    //    Serial.println(exposureLevelToJules[minimalDistanceJulesLevel]);
-  }
-
-  //Serial.print("calculatedMinimalDistance:");Serial.println(calculatedMinimalDistance);
-  Serial.print("object:");
-  Serial.println(calculatedMinimalDistance < INT_MAX ? "Yes" : "No");
-
-  return calculatedMinimalDistance < INT_MAX  //DEBUG  calculated => miniDistance?
-           ? 1
-           : 0;  // Return 0 for no objects detected, 1 for objects detected
-}
-
-
-
-
-
-
-/*
-/// @brief Use sensor data to calculate the minimal distance and jules level
-/// @param printData Whether to print the sensor data in serial monitor
-/// @return 1 if objects detected, 0 if no objects detected
-int LightLogicControl::processSensorInfo(bool printData) {
-  if (radar1Valid) {
-    if (radar1.radarObjectCount > 0) {
-      if (printData) {
-        Serial.println("Radar1 detected objects:");
-        for (int i = 0; i < radar1.radarObjectCount; i++) {
-          Serial.print("Object ");
-          Serial.print(i);
-          Serial.print(": ");
-          Serial.print(radar1.radarObject[i].x);
-          Serial.print(", ");
-          Serial.print(radar1.radarObject[i].y);
-          Serial.print(", ");
-          Serial.print(radar1.radarObject[i].speed);
-          Serial.print(", ");
-          Serial.println(radar1.radarObject[i].resolution);
-        }
-      }
-    } else {
-      if (printData) {
-        Serial.println("Radar1 detected no objects.");
-      }
-    }
-  }
-  if (radar2Valid) {
-    if (radar2.radarObjectCount > 0) {
-      if (printData) {
-        Serial.println("Radar2 detected objects:");
-        for (int i = 0; i < radar2.radarObjectCount; i++) {
-          Serial.print("Object ");
-          Serial.print(i);
-          Serial.print(": ");
-          Serial.print(radar2.radarObject[i].x);
-          Serial.print(", ");
-          Serial.print(radar2.radarObject[i].y);
-          Serial.print(", ");
-          Serial.print(radar2.radarObject[i].speed);
-          Serial.print(", ");
-          Serial.println(radar2.radarObject[i].resolution);
-        }
-      }
-    } else {
-      if (printData) {
-        Serial.println("Radar2 detected no objects.");
-      }
-    }
-  }
-  if (thermalSensorValid) {
-    if (thermalDetectionCount > 0) {
-      if (printData) {
-        Serial.println("Thermal sensor detected objects:");
-        for (int i = 0; i < thermalDetectionCount; i++) {
-          Serial.print("Detection ");
-          Serial.print(i);
-          Serial.print(": ");
-          Serial.print(thermalDetections[i].x);
-          Serial.print(", ");
-          Serial.print(thermalDetections[i].y);
-          Serial.print(", ");
-          Serial.print(thermalDetections[i].w);
-          Serial.print(", ");
-          Serial.println(thermalDetections[i].h);
-        }
-      }
-    } else {
-      if (printData) {
-        Serial.println("Thermal sensor detected no objects.");
-      }
-    }
-  }
-
-  int minimalDistance = INT_MAX;
-
-  if (radar1Valid && radar1.radarObjectCount > 0) {
-    for (int i = 0; i < radar1.radarObjectCount; i++) {
-      int distance = radar1.radarObject[i].x * radar1.radarObject[i].x + radar1.radarObject[i].y * radar1.radarObject[i].y;
-      distance = sqrt(distance);  // Calculate Euclidean distance
-      radar1.radarObject[i].distance = distance;
-
-      Serial.print("radar1 object");
-      Serial.print(i);
-      Serial.print(" distance:");
-      Serial.println(distance);
-      if (distance < minimalDistance) {
-        minimalDistance = distance;
-      }
-    }
-  }
-
-  if (radar2Valid && radar2.radarObjectCount > 0) {
-    for (int i = 0; i < radar2.radarObjectCount; i++) {
-      int distance = radar2.radarObject[i].x * radar2.radarObject[i].x + radar2.radarObject[i].y * radar2.radarObject[i].y;
-      distance = sqrt(distance);  // Calculate Euclidean distance
-      radar2.radarObject[i].distance = distance;
-
-      Serial.print("radar2 object");
-      Serial.print(i);
-      Serial.print(" distance:");
-      Serial.println(distance);
-      if (distance < minimalDistance) {
-        minimalDistance = distance;
-      }
-    }
-  }
   if (thermalSensorValid && thermalDetectionCount > 0) {
     for (int i = 0; i < thermalDetectionCount; i++) {
       int distance = 0;
@@ -1778,8 +1125,6 @@ int LightLogicControl::processSensorInfo(bool printData) {
   if ((radar1Valid && radar1.radarObjectCount > 0) || (radar2Valid && radar2.radarObjectCount > 0) || (thermalSensorValid && thermalDetectionCount > 0)) {
 
     calculatedMinimalDistance = minimalDistance - DETECT_DISTANCE_OFFSET;
-    //  calculatedMinimalDistance = minimalDistance-50;
-    //  calculatedMinimalDistance = minimalDistance;
 
     if (calculatedMinimalDistance < 0) {
       calculatedMinimalDistance = 0;
@@ -1787,8 +1132,6 @@ int LightLogicControl::processSensorInfo(bool printData) {
   }
 
   minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(calculatedMinimalDistance);
-  //  minimalDistanceJulesLevel = julesLevelForDistance(calculatedMinimalDistance);
-
 
   if (printData) {
     Serial.println("_____________________________________ Jules _______________________________________");
@@ -1798,10 +1141,8 @@ int LightLogicControl::processSensorInfo(bool printData) {
     Serial.print(minimalDistanceJulesLevel);
     Serial.print(", Jules: ");
     Serial.println(exposure16LevelToJules[minimalDistanceJulesLevel]);
-    //    Serial.println(exposureLevelToJules[minimalDistanceJulesLevel]);
   }
 
-  //Serial.print("calculatedMinimalDistance:");Serial.println(calculatedMinimalDistance);
   Serial.print("object:");
   Serial.println(calculatedMinimalDistance < INT_MAX ? "Yes" : "No");
 
@@ -1809,14 +1150,6 @@ int LightLogicControl::processSensorInfo(bool printData) {
            ? 1
            : 0;  // Return 0 for no objects detected, 1 for objects detected
 }
-*/
-
-
-
-
-
-
-
 
 /// @brief convert distance to exposure level (4 levels)
 /// @param distance The distance in mm
@@ -1974,9 +1307,6 @@ String LightLogicControl::getDiagnosticsLevelJson_2() {
   String rtcTimeStr = String(rtcUnixtime);
   rtcTimeStr = "\"" + rtcTimeStr + "\"";
 
-  // Serial.println("====================================================================================");
-  // Serial.print("rtcUnixtime");Serial.println(rtcUnixtime);
-
   String commandTraceStr = "to be defined";
   commandTraceStr = "\"" + commandTraceStr + "\"";
 
@@ -2006,9 +1336,6 @@ String LightLogicControl::getDiagnosticsLevelJson_1() {
       "\"" + _temperatureDataStr + "\"";  // Wrap in quotes for JSON
   }
 
-  //  String _temperatureDataStr      = String(_temperatureData);
-  //  _temperatureDataStr             = "\"" + _temperatureDataStr + "\"";
-
   String _lampEnableStr = String(_lampEnable ? "true" : "false");
   _lampEnableStr = "\"" + _lampEnableStr + "\"";
 
@@ -2028,10 +1355,8 @@ String LightLogicControl::getDiagnosticsLevelJson_1() {
 
 String LightLogicControl::getDiagnosticsLevelJson_0() {
   uint32_t uptimeSeconds = (millis() - program_StartUpTime) / 1000;
-  //  int uptimeSeconds = processedMinutesCount;
 
   uint8_t lastError = errorStatus;
-  //  int lastError     = 102;
 
   String uptimeSecondsStr = String(uptimeSeconds);
   uptimeSecondsStr = "\"" + uptimeSecondsStr + "\"";
@@ -2045,27 +1370,6 @@ String LightLogicControl::getDiagnosticsLevelJson_0() {
   return sendJson;
 
 }  //end String
-
-
-
-/*
-String LightLogicControl::getDiagnosticsLevelJson_0() {
-  int uptimeSeconds = processedMinutesCount;
-  int lastError     = 102;
-
-  String uptimeSecondsStr = String(uptimeSeconds);
-   uptimeSecondsStr  = "\"" + uptimeSecondsStr + "\"";
-
-  String  lastErrorStr    = String(lastError);
-   lastErrorStr      = "\"" + lastErrorStr + "\"";
-     
-String sendJson =
-      "{\"uptimeSeconds\":" + uptimeSecondsStr + ",\"lastError\":" + lastErrorStr +  "}" ;
-
-return sendJson;
-
-}//end String  
-*/
 
 /// @brief Get the sensor data in JSON format for sending to the server
 /// @return JSON string containing radar, thermal, temperature, RTC, EEPROM data
@@ -2114,10 +1418,7 @@ String LightLogicControl::getSensorDataJson() {
   }
 
   int rtcUnixtime = this->rtc.outputNowUnixtime();
-  // int rtcUnixtime  =  rtc.outputNowUnixtime();
-  //     uint32_t rtcUnixtime  =  rtc.outputNowUnixtime();
 
-  //  int rtcUnixtime = getCurrentRtcTime().unixtime();
   String rtcTimeStr = String(rtcUnixtime);
   rtcTimeStr = "\"" + rtcTimeStr + "\"";
 
@@ -2197,11 +1498,6 @@ void LightLogicControl::initRTC() {
     Serial.print("UnixTime:");
     Serial.println(currentRtcTime.unixtime());
 
-    /*
-  DateTime  dateTime            = lightControl.rtc.outputNowDateTime();
-        lightControl.currentRtcTime   = dateTime;
-*/
-
   } else {
     Serial.println("RTC initialization failed");
   }
@@ -2211,8 +1507,6 @@ void LightLogicControl::initRTC() {
 /// @return Current RTC time as DateTime object
 DateTime LightLogicControl::getCurrentRtcTime() {
   if (rtcValid) {
-    //currentRtcTime = rtc.outputNowDateTime();
-    //  currentRtcTime = this->rtc.outputNowDateTime();
     currentRtcTime = rtc.now();
     return currentRtcTime;
   } else {
@@ -2226,7 +1520,6 @@ DateTime LightLogicControl::getCurrentRtcTime() {
 uint32_t LightLogicControl::get8hourSectionStartTime() {
   if (rtcValid) {
     currentRtcTime = rtc.outputNowDateTime();
-    //currentRtcTime = rtc.now();
 
     uint32_t currentTime = currentRtcTime.unixtime();
     uint32_t sectionStartTime =
@@ -2314,8 +1607,6 @@ int LightLogicControl::eepromClear_16LevelSection(uint8_t index, uint32_t sectio
 
 }  //end    int LightLogicControl::eepromClear_16LevelSection
 
-
-
 /*
 * Function
 * 1) looking for which 8hr session in two section
@@ -2385,7 +1676,6 @@ int LightLogicControl::eepromInit_16LevelSection(uint32_t sectionStartTime) {
 }  //end      int LightLogicControl::eepromInit_16LevelSection
 
 
-
 /// @brief find a block for the 8-hour section in EEPROM, erase the block and write the section start time at the start of the block
 /// @param sectionStartTime The start time of the section to initialize
 int LightLogicControl::eepromInitSection(uint32_t sectionStartTime) {
@@ -2448,8 +1738,6 @@ int LightLogicControl::eepromInitSection(uint32_t sectionStartTime) {
   return minimalStartTimeSectionIndex;
 }
 
-
-
 /*
 * Function
 * 1) write schedule into eeprom
@@ -2505,13 +1793,9 @@ int LightLogicControl::eepromWriteSchedule() {
     }  //end      for ( int i=0; i<42; i++ )
     Serial.println("");
 
-  }  //end      if(true){ //vertify
-
-
-
+  }  //end
 
 }  //end      int LightLogicControl::eepromWriteSchedule
-
 
 int LightLogicControl::eepromRead16LevelSection(uint32_t sectionStartTime) {
   if (!eepromValid) {
@@ -2575,8 +1859,6 @@ int LightLogicControl::eepromRead16LevelSection(uint32_t sectionStartTime) {
 
   return 0;  // Success
 }  //end
-
-
 
 /*
 * Function
@@ -2869,13 +2151,6 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
 }  //end  int LightLogicControl::eepromGetAccumulatedExposure_16Level
 
 
-
-
-//int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStartTime) {
-//
-//}//end      int LightLogicControl::eepromGetAccumulatedExposure_16Level
-
-
 /// @brief Get the accumulated exposure for a specific 8-hour section from EEPROM.
 /// @param sectionStartTime The start time of the section to read.
 /// @return The accumulated exposure for the section, or -1 on error.
@@ -3028,22 +2303,12 @@ int LightLogicControl::eepromGetNewestEntryLightOnData() {
   }
   uint8_t localCopy[EEPROM_LIGHT_LOG_DATA_SIZE * EEPROM_LIGHT_LOG_ENTRIES] = { 0 };  // Initialize data to zero
   eeprom.read(EEPROM_LIGHT_LOG_START_ADDRESS, localCopy, sizeof(localCopy));
-  // {
-  //   //debug print all
-  //   Serial.print("EEPROM light log data: ");
-  //   for (int i = 0; i < EEPROM_LIGHT_LOG_ENTRIES; i++) {
-  //     uint32_t lightOnTimeThisEntry = *(uint32_t *)(localCopy + i * EEPROM_LIGHT_LOG_DATA_SIZE);
-  //     Serial.println(lightOnTimeThisEntry);
-  //   }
-  // }
   int newestEntryIndex = 0;
   for (int i = 0; i < EEPROM_LIGHT_LOG_ENTRIES; i++) {
     uint32_t lightOnTimeThisEntry = *(uint32_t*)(localCopy + i * EEPROM_LIGHT_LOG_DATA_SIZE);
     uint32_t lightOnTimeNextEntry = *(uint32_t*)(localCopy + ((i + 1) % EEPROM_LIGHT_LOG_ENTRIES) * EEPROM_LIGHT_LOG_DATA_SIZE);
     if ((lightOnTimeThisEntry + 1) == lightOnTimeNextEntry) {
       newestEntryIndex = ((i + 1) % EEPROM_LIGHT_LOG_ENTRIES);  // Found the newest entry
-      // Serial.print("Newest entry index: ");
-      // Serial.println(newestEntryIndex);
     } else {
       break;
     }
@@ -3152,12 +2417,9 @@ bool LightLogicControl::getscheduleInEffect(uint8_t* scheduleData, bool fprint) 
 
   //-------------------------- end of process shifting --------------------------------------
 
-
-
   int byteIndex = scheduleIndex / 8;
   int bitIndex = scheduleIndex % 8;
   bool scheduleInEffect = false;
-
 
   if (byteIndex >= 0 && byteIndex < 42) {  // 42 bytes for 7 days * 48 slots / 8 bits
     scheduleInEffect = (scheduleData[byteIndex] & (1 << bitIndex)) != 0;
@@ -3198,161 +2460,8 @@ bool LightLogicControl::getscheduleInEffect(uint8_t* scheduleData, bool fprint) 
 
 }  //end      int LightLogicControl::bool getscheduleInEffect
 
-
-
-/*
-bool LightLogicControl::getscheduleInEffect(uint8_t* scheduleData,bool fprint){
-      DateTime currentUTCTime       = rtc.outputNowDateTime();
-
-      uint8_t dayOfTheWeek    = currentUTCTime.dayOfTheWeek(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-      uint8_t hour            = currentUTCTime.hour();
-      uint8_t min             = currentUTCTime.minute();
-      //each slot is 30 minutes, so there are 48 slots in a day
-      int scheduleIndex       = dayOfTheWeek * 48 + (hour * 2) + (min / 30);
-      int byteIndex           = scheduleIndex / 8;
-      int bitIndex            = scheduleIndex % 8;
-      bool scheduleInEffect   = false;
-
-      if (byteIndex >= 0 && byteIndex < 42){ // 42 bytes for 7 days * 48 slots / 8 bits
-        scheduleInEffect = (scheduleData[byteIndex] & (1 << bitIndex)) != 0;
-      } 
-
-      if(fprint){
-        Serial.print("Current UTC time:DayOfWk:");
-        Serial.print(dayOfTheWeek);
-        Serial.print("\t H:");
-        Serial.print(hour);
-        Serial.print("\t M:");
-        Serial.print(min);
-        Serial.print("\t scheduleInEffect:");
-        Serial.print(scheduleInEffect);
-//        Serial.print(scheduleInEffect ? "EN" : "DIS");
-        Serial.print("\t byteIndex:");Serial.print(byteIndex);
-        Serial.print("\t bitIndex:");Serial.println(bitIndex);
-        Serial.print("\t scheduleData[byteIndex]:");Serial.print(scheduleData[byteIndex],HEX);
-        Serial.println();
-       }//end    if(fprint)
-
-      if (scheduleInEffect) {
-            if(fprint){
-            Serial.println("Schedule as ENABLED, do smart");
-            }
-      }else {
-            if(fprint){
-            Serial.println("Schedule as DISABLED, turn off light");
-            }
-            setLightState(false);
-            //return 0; // Light turned off
-      }//end else
-
-    return scheduleInEffect;
-
-}//end      int LightLogicControl::bool getscheduleInEffect
-*/
-
-
-/*
-bool LightLogicControl::processSmartMode(bool scheduleEnabled, uint8_t* scheduleData){
-    Serial.println("INT_UV_MODE_SMART________________");
-
-
-uint8_t becon_schedule_hex[42]={  //4   8     12   16    20    24
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Sun
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Mon
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Tue
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Wed
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Thu
-                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Fir
-                      0x00,0x00 ,0x00 ,0x00 ,0x80 ,0x00 ,   //Sat
-                    };
-ToolsArray::prn_arr(becon_schedule_hex, 42);
-ToolsArray::rotate_right(16, becon_schedule_hex, 42);
-ToolsArray::prn_arr(becon_schedule_hex, 42);
-
-
-
-
-     if(true){
-        Serial.println("processSmartMode(bool scheduleEnabled, uint8_t* scheduleData): ");
-          for(int i=0;i<42;i++){
-
-              if(   (i%6==0)  && (i!=0)   )
-            //  if(   (i%8==0)  && (i!=0)   )
-              { Serial.println("");  }
-              Serial.print( scheduleData[i],HEX  ); Serial.print(" ");
-          }
-        Serial.println(" ");  
-     }//end if(true)
-
-    if (scheduleEnabled) 
-    {
-        bool scheduleInEffect;
-
-
-    uint8_t   locatTime_schedule[SCHEDULE_BYTE];
-    for(int i=0;i<SCHEDULE_BYTE;i++){
-        locatTime_schedule[i] = scheduleData[i] ;
-    }
-    ToolsArray::prn_arr(locatTime_schedule, SCHEDULE_BYTE);
-    ToolsArray::rotate_right(16, locatTime_schedule , SCHEDULE_BYTE);
-    ToolsArray::prn_arr(locatTime_schedule, SCHEDULE_BYTE);
-
-        //scheduleInEffect = getscheduleInEffect( locatTime_schedule,true);
-        scheduleInEffect = getscheduleInEffect( scheduleData,true);
-        if(!scheduleInEffect){return 0;}
-    
-    }//end    if (scheduleEnabled)
-
-    if(true){
-    Serial.print("accumulatedExposureThreshold:");Serial.println(accumulatedExposureThreshold);
-    Serial.print("accumulatedExposure:");Serial.println(accumulatedExposure);
-    }
-
-    if (accumulatedExposure >= accumulatedExposureThreshold) {
-            Serial.println(
-          "Accumulated exposure reached threshold, turning off light.");
-      setLightState(false);
-
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].lampOnTimeStamps_start = lampOnRecordCache.lampOnTimeStamps_start;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].lampOnTimeStamps_end   = lampOnRecordCache.lampOnTimeStamps_end;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].length                 = lampOnRecordCache.length;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].reason                 = "Hit 8hr limit";
-
-      return 0; // Light turned off
-    } else {
-      Serial.println("Accumulated exposure is below threshold, turning on light.");
-      setLightState(true);
-      return 1; // Light turned on
-    }
-
-}//end  void processSmartMode
-*/
-
-
-
-
 bool LightLogicControl::processSmartMode(bool scheduleEnabled, uint8_t* scheduleData) {
   bool fprint = true;
-
-  // if(fprint){
-  // Serial.println("INT_UV_MODE_SMART________________");
-  // }
-
-
-
-  //uint8_t becon_schedule_hex[42]={  //4   8     12   16    20    24
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Sun
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Mon
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Tue
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Wed
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Thu
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,   //Fir
-  //                      0x00,0x00 ,0x00 ,0x00 ,0x80 ,0x00 ,   //Sat
-  //                    };
-  //ToolsArray::rotate_right(16, becon_schedule_hex, 42);
-  //ToolsArray::prn_arr(becon_schedule_hex, 42);
-
-
 
   if (fprint) {
     //     if(true){      // only display scheduleData[i]
@@ -3410,82 +2519,23 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
 
 
   switch (uvLampMode) {
-    case INT_UV_MODE_SMART:
+
+    case INT_UV_MODE_SMART: 
       {
         processSmartMode(scheduleEnabled, scheduleData);
-        /*    
-    Serial.println("INT_UV_MODE_SMART________________");
-    
-     if(true){
-        Serial.println(" processLightControl(bool scheduleEnabled, uint8_t* scheduleData): ");
-          for(int i=0;i<42;i++){
-              if(   (i%8==0)  && (i!=0)   )
-              { Serial.println("");  }
-              Serial.print( scheduleData[i],HEX  ); Serial.print(" ");
-          }
-        Serial.println(" ");  
-     }//end if(true)
-
-
-
-    if (scheduleEnabled) 
-    {
-        bool scheduleInEffect;
-        scheduleInEffect = getscheduleInEffect( scheduleData,true);
-        if(!scheduleInEffect){return 0;}
-    
-    }//end    if (scheduleEnabled)
-
-    if(true){
-    Serial.print("accumulatedExposureThreshold:");Serial.println(accumulatedExposureThreshold);
-    Serial.print("accumulatedExposure:");Serial.println(accumulatedExposure);
-    }
-
-    if (accumulatedExposure >= accumulatedExposureThreshold) {
-            Serial.println(
-          "Accumulated exposure reached threshold, turning off light.");
-      setLightState(false);
-
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].lampOnTimeStamps_start = lampOnRecordCache.lampOnTimeStamps_start;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].lampOnTimeStamps_end   = lampOnRecordCache.lampOnTimeStamps_end;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].length                 = lampOnRecordCache.length;
-    lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].reason                 = "Hit 8hr limit";
-
-      return 0; // Light turned off
-    } else {
-      Serial.println("Accumulated exposure is below threshold, turning on light.");
-      setLightState(true);
-      return 1; // Light turned on
-    }
-  */
       }
       break;  //end         case INT_UV_MODE_SMART
 
-
-
     case INT_UV_MODE_MANUAL:
       {
-        //case UV_MODE_MANUAL: {
         Serial.println("INT_UV_MODE_MANUAL________________");
 
         if (calculatedMinimalDistance < 300) {
-          //  if (((lightControl.uvLampMode == UV_MODE_SMART) || (lightControl.uvLampMode == UV_MODE_MANUAL))) {
           Serial.println("Minimal distance is less than 30cm, turning off the light");
           setLightState(false);
-          //lightControl.turnOffandRecord();
-          //if (lightControl.getLightState()) {
-          //         lightControl.turnOffandRecord();
-          //}
         } else {
           setLightState(true);
         }
-
-
-
-
-        //  setLightState(true);
-
-
         return 1;  // Light turned on
       }
     case INT_UV_MODE_UNLIMITED:
@@ -3504,7 +2554,6 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
         int radar2Count = radar2.radarObjectCount;
         int thermalCount = thermalDetectionCount;
 
-
         Serial.print("radar1Count:");
         Serial.print(radar1Count);
         Serial.print("\t");
@@ -3521,9 +2570,7 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
           setPersonCountThreshold = 3;
         }
 
-
         if ((radar1Count > 0 || radar2Count > 0 || thermalCount > 0) && ((radar1Count < setPersonCountThreshold) && (radar2Count < setPersonCountThreshold) && (thermalCount < setPersonCountThreshold)))
-        //  if ((radar1Count > 0 || radar2Count > 0 || thermalCount > 0) && ( (radar1Count<=setPersonCountThreshold)&&(radar2Count<=setPersonCountThreshold)&&(thermalCount<=setPersonCountThreshold) )  )
         {
           Serial.println("Occupied room detected, turning on light.");
           setLightState(true);
@@ -3534,18 +2581,6 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
           return 0;  // Light turned off
         }
 
-
-        /*
-    if (radar1Count > 0 || radar2Count > 0 || thermalCount > 0) {
-      Serial.println("Occupied room detected, turning on light.");
-      setLightState(true);
-      return 1; // Light turned on
-    } else {
-      Serial.println("No occupancy detected, turning off light.");
-      setLightState(false);
-      return 0; // Light turned off
-    }
-*/
       }
       break;
     case INT_UV_MODE_EMPTY_ROOM:
@@ -3554,11 +2589,6 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
         int radar1Count = radar1.radarObjectCount;
         int radar2Count = radar2.radarObjectCount;
         int thermalCount = thermalDetectionCount;
-
-        //  DEBUG
-        //radar1Count = 0;
-        //radar2Count = 0;
-        //thermalCount = 0;
 
         Serial.print("radar1Count:");
         Serial.print(radar1Count);
@@ -3592,28 +2622,9 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
         lampOnRecord[LAMP_ON_RECORD_MANUAL].length = lampOnRecordCache.length;
         lampOnRecord[LAMP_ON_RECORD_MANUAL].reason = "Manual mode shut off";
 
-
-        //    lampOnRecord[0].lampOnTimeStamps_start = lampOnRecordCache.lampOnTimeStamps_start;
-        //    lampOnRecord[0].lampOnTimeStamps_end   = lampOnRecordCache.lampOnTimeStamps_end;
-        //    lampOnRecord[0].length                 = lampOnRecordCache.length;
-        //    lampOnRecord[0].reason                 = "Manual mode shut off";
-
-        //uvLampMode = INT_UV_MODE_IDLE_OFF;
-
-
         return 0;  // Light turned off
       }
       break;
-
-      //    case INT_UV_MODE_IDLE_MANUAL:
-      //    break;
-
-      //    case INT_UV_MODE_IDLE_OFF:
-      //    break;
-
-      //  case INT_UV_MODE_IDLE:
-      //  //dummy
-      //  break;
 
     default:
       {
@@ -3626,8 +2637,6 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
   }  //end switch
 
 }  //end    int LightLogicControl::processLightControl(
-
-
 
 const char* LightLogicControl::getCompiledTimeStr() {
   return compiledTimeStr;
