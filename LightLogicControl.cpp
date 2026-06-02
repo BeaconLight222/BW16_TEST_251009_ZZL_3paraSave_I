@@ -1124,6 +1124,8 @@ int LightLogicControl::processSensorInfo(bool printData) {
     if (calculatedMinimalDistance < 0) {
       calculatedMinimalDistance = 0;
     }
+  } else if (!radar1Valid && !radar2Valid && !thermalSensorValid) {
+    calculatedMinimalDistance = -1;  //
   } 
 
   minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(calculatedMinimalDistance);
