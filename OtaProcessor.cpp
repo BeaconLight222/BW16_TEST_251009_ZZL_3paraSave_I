@@ -234,7 +234,7 @@ int OtaProcessor::OtaProcessDataChunk(uint8_t *data, size_t length,
     Serial.println(eraseLocation, HEX);
     flash_erase_sector(NULL, eraseLocation);
     erasedFlashAddress = eraseLocation;
-    memset(pageSwapData, 0xFF, sizeof(pageSwapData));
+    memset(pageSwapData, 0xFF, 4096);
   }
 
   if ((flashAddress & 0xFFF) + length > 4096) {
@@ -254,7 +254,7 @@ int OtaProcessor::OtaProcessDataChunk(uint8_t *data, size_t length,
     Serial.print("Writing flash page at address: ");
     Serial.println(flashInAddress, HEX);
     flash_stream_write(NULL, flashInAddress, 4096, pageSwapData);
-    memset(pageSwapData, 0xFF, sizeof(pageSwapData));
+    memset(pageSwapData, 0xFF, 4096);
   }
 
   return 1;
@@ -266,7 +266,7 @@ int OtaProcessor::OtaWriteLeftoverData() {
 
   // check if pageSwapData is all 0xFF
   int allFF = 1;
-  for (int i = 0; i < (int)sizeof(pageSwapData); i++) {
+  for (int i = 0; i < (int)4096; i++) {
     if (pageSwapData[i] != 0xFF) {
       allFF = 0;
       break;
@@ -282,7 +282,7 @@ int OtaProcessor::OtaWriteLeftoverData() {
   Serial.print("Writing left over flash page at address: ");
   Serial.println(flashInAddress, HEX);
   flash_stream_write(NULL, flashInAddress, 4096, pageSwapData);
-  memset(pageSwapData, 0xFF, sizeof(pageSwapData));
+  memset(pageSwapData, 0xFF, 4096);
 
   return 1;
 }
