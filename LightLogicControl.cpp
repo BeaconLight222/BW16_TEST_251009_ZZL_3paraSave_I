@@ -1,5 +1,6 @@
 #include "WString.h"
 #include <stdint.h>
+#include <stdlib.h>
 #include <cstdio>
 /// @file LightLogicControl.cpp
 /// @brief Light logic control for the BW16 project, also manages radar, thermal sensor, temperature sensor, RTC, and EEPROM interactions.
@@ -967,11 +968,11 @@ bool LightLogicControl::getLightState() {
 /// @param printData Whether to print the sensor data in serial monitor
 /// @return 1 if objects detected, 0 if no objects detected
 int LightLogicControl::processSensorInfo(bool printData) {
-  int r1_distance,r2_distance;
-  int r1_min,r2_min;
 
-  r1_min = INT_MAX;
-  r2_min = INT_MAX;
+  int r1_min = INT_MAX;
+  int r2_min = INT_MAX;
+
+  bool objectDetected = false;
 
   if (radar1Valid) {
     if (radar1.radarObjectCount > 0) {
@@ -1055,7 +1056,7 @@ int LightLogicControl::processSensorInfo(bool printData) {
       Serial.print(i);
       Serial.print(" distance:");
       Serial.println(r1_distance);
-      if (r1_distance < minimalDistance) {
+      if (r1_distance < r1_min) {
         r1_min = r1_distance;
       }
     }
@@ -1077,15 +1078,8 @@ int LightLogicControl::processSensorInfo(bool printData) {
     }
   }
 
-
-  if( radar1Valid && (radar1.radarObjectCount == 0)      ){
-      minimalDistance = r2_min;
-  }
-  else if(  radar2Valid && (radar2.radarObjectCount == 0)  ){
-      minimalDistance = r1_min;
-  }else if(  (   radar1Valid && radar1.radarObjectCount > 0 )&&(    radar2Valid && radar2.radarObjectCount > 0    )  ){
-      minimalDistance = (r1_min + r2_min)/2;
-  }
+  // Take minimal distance from both radars
+  minimalDistance = r1_min < r2_min ? r1_min : r2_min;
 
   if (thermalSensorValid && thermalDetectionCount > 0) {
     for (int i = 0; i < thermalDetectionCount; i++) {
@@ -1114,20 +1108,19 @@ int LightLogicControl::processSensorInfo(bool printData) {
 
   if (printData) {
     Serial.print("Temperature: ");
-    String temperatureDataStr =
-      String(temperatureData, 2);  // Format to 2 decimal places
+    String temperatureDataStr = String(temperatureData, 2);  // Format to 2 decimal places
     Serial.print(temperatureDataStr);
     Serial.println(" °C");
   }
 
+  // If we had valid data to calculate minimalDistance, apply the distance offset
   if ((radar1Valid && radar1.radarObjectCount > 0) || (radar2Valid && radar2.radarObjectCount > 0) || (thermalSensorValid && thermalDetectionCount > 0)) {
-
     calculatedMinimalDistance = minimalDistance - DETECT_DISTANCE_OFFSET;
-
+    objectDetected = true;
     if (calculatedMinimalDistance < 0) {
       calculatedMinimalDistance = 0;
     }
-  }
+  } 
 
   minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(calculatedMinimalDistance);
 
@@ -1142,11 +1135,9 @@ int LightLogicControl::processSensorInfo(bool printData) {
   }
 
   Serial.print("object:");
-  Serial.println(calculatedMinimalDistance < INT_MAX ? "Yes" : "No");
+  Serial.println(objectDetected ? "Yes" : "No");
 
-  return calculatedMinimalDistance < INT_MAX  //DEBUG  calculated => miniDistance?
-           ? 1
-           : 0;  // Return 0 for no objects detected, 1 for objects detected
+  return objectDetected ? 1 : 0;  // Return 0 for no objects detected, 1 for objects detected
 }
 
 /// @brief convert distance to exposure level (4 levels)
