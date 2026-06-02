@@ -89,6 +89,7 @@
 #include "EnergyEngineer.h"
 #include "uv_lamp_parameter.h"
 #include "src/Simple_misc_sensor/beacon_pcb.h"
+#include "src/ButtonHandling/ButtonHandler.h"
 // compiled with 3.1.9
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -643,6 +644,9 @@ void setup() {
 
   payload_manager.begin();
 
+  // Initialize button handling
+  button_handler_init();
+
   if (beacon_pcb.begin()) {
     Serial.println("beacon_pcb: PASS");
   } else {
@@ -864,18 +868,14 @@ void setup() {
     lastWifiConnectedTime = millis() - NO_CONNECTION_RESTART_BLE_CONFIG_TIME;  // Set to 10 seconds ago to trigger advertising immediately
   }
 
-  //pinMode(PA15, INPUT_PULLUP);
-  pinMode(PA15, INPUT_IRQ_CHANGE);
-  digitalSetIrqHandler(PA15, buttonIrqHandler);
-  //2.4V, change from 5D00, disable PAD_BIT_SDIO_H3L1 change voltage from 1.6V to 2.4V. Maybe still some conflict but OK for now.
-  //This also ensures the pin is pulled up
-  PINMUX->PADCTR[_PA_15] = 0x1D00;
+  button_handler_enable_interrupt();
 
   awsMqtt.begin();
 }  //end  void setup()
 
 void getSensorData(bool wifiStatus) {
   //calculate lamp on time for logging
+  Serial.println("START getSensorData ————————————————————————————————————————————");
   {
     if (lightControl.lightOnTimeLastCheckMilliseconds == 0) {
       lightControl.lightOnTimeLastCheckMilliseconds = millis();
@@ -958,6 +958,7 @@ void getSensorData(bool wifiStatus) {
     lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
 
   }  //end    else
+  Serial.println("———————————————————————————————————————————— End getSensorData");
 }  //end      void getSensorData(bool wifiStatus)
 
 void sendLoggingAndTelemetryDataToServer() {
@@ -1038,6 +1039,7 @@ void sendLoggingAndTelemetryDataToServer() {
 
 void loop() {
 
+  Serial.println("\r\n—————————————————————————————— Beacon Device Loop Start ————————————————————————————————————————————");
 
   {
     lightControl.lightState = lightControl.getLightState();
@@ -1056,6 +1058,7 @@ void loop() {
     beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP, false);
   }
 
+  Serial.println("START Checking Button Acitivity ————————————————————————————————————————————");
   int buttonState = checkButtonActivity();
   if ((buttonState & (1 << 0))) {
     Serial.println("Button short pressed_________________________________________________________________");
@@ -1087,6 +1090,9 @@ void loop() {
 
   }
 
+  Serial.println("———————————————————————————————————————————— END Checking Button Acitivity");
+
+  Serial.println("START Checking WiFi Connection ————————————————————————————————————————————");
   fetchWifiSetting();
   char *ssid = getWifiSsidAfterFetch();
   char *password = getWifiPasswordAfterFetch();
@@ -1101,6 +1107,9 @@ void loop() {
       lightControl.setLightState(false);
     }
   }
+  Serial.println("———————————————————————————————————————————— END Checking WiFi Connection");
+
+  Serial.println("START Handling WiFi Connection ————————————————————————————————————————————");
   if (wifiWasConnected != wifiConnected) {
     if (wifiConnected) {
 
@@ -1372,8 +1381,10 @@ void loop() {
       }    //end        if (lightControl.inProgress8hourSectionStartTime > 0)
     }      //end  {}
   }        //end    else
+  Serial.println("———————————————————————————————————————————— END Handling WiFi Connection");
 
   processAwsMqtt_print(false);
   wifiWasConnected = wifiConnected;
   wdt.RefreshWatchdog();
+  Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
 }  //end void loop()
