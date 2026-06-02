@@ -1569,10 +1569,9 @@ uint8_t LightLogicControl::findWhichLevelSection(uint32_t sectionStartTime) {
       return i;  // Return the address if section is already initialized
     }
 
-    return -1;
-
   }  //end for
 
+  return -1;
 
 }  //end    uint8_t   LightLogicControl::findWhichLevelSection
 
@@ -1750,8 +1749,6 @@ int LightLogicControl::eepromWriteSchedule() {
 
   }  //end    if(fprint)
 
-
-
   int ret = eeprom.write(readAddress, schedule, EEPROM_SCHEDULE_SIZE);
   if (ret < 0) {
     Serial.print("Failed to write EEPROM at address ");
@@ -1781,6 +1778,8 @@ int LightLogicControl::eepromWriteSchedule() {
     Serial.println("");
 
   }  //end
+
+  return 0;
 
 }  //end      int LightLogicControl::eepromWriteSchedule
 
@@ -2622,6 +2621,8 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
       }
       break;
   }  //end switch
+
+  return lightState;
 
 }  //end    int LightLogicControl::processLightControl
 
