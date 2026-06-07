@@ -2495,6 +2495,8 @@ bool LightLogicControl::processSmartMode(bool scheduleEnabled, uint8_t* schedule
     lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].length = lampOnRecordCache.length;
     lampOnRecord[LAMP_ON_RECORD_HIT8HOUR].reason = "Hit 8hr limit";
 
+    setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
+
     return 0;  // Light turned off
   } else {
     Serial.println("Accumulated exposure is below threshold, turning on light.");

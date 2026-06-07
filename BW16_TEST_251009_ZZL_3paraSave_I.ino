@@ -453,6 +453,7 @@ void processAwsMqtt_print(bool fprint) {
           lightControl.eepromClear_16LevelSection(1, lightControl.inProgress8hourSectionStartTime);
           //lightControl.eepromClear_16LevelSection( index, lightControl.inProgress8hourSectionStartTime  );
 
+          lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
           lightControl.eepromRead16LevelSection(lightControl.inProgress8hourSectionStartTime);
 
         } else {
@@ -773,6 +774,9 @@ void setup() {
   lightControl.begin();                                                             // fetch eeprom data
   lightControl.get8hourSectionStartTime();                                          // Initialize the 8-hour bucket timestamp
   lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime); // Re-load exposure state from EEPROM
+  if (lightControl.accumulatedExposure >= lightControl.accumulatedExposureThreshold) {
+    lightControl.setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
+  }
   lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);  //processSmartMode,
   lightControl.processSensorInfo(true);                                             //fetch distance, find min distance
   getSensorData(false);                                                             // emergency shut down below 30cm
@@ -1290,6 +1294,9 @@ void loop() {
           lightControl.eepromInit_16LevelSection(lightControl.inProgress8hourSectionStartTime);
           //          lightControl.eepromInitSection(lightControl.inProgress8hourSectionStartTime);
 
+          lightControl.accumulatedExposure = 0;
+          lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
+
           uint32_t timestamp;
           timestamp = lightControl.getLongWordEeprom(EEPROM_16LEVEL_LOG_START_ADDRESS);
           //lightControl.eeprom.read(0x200, timestamp, 4);
@@ -1331,6 +1338,10 @@ void loop() {
 
           //update the accumulated exposure
           lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime);
+
+          if (lightControl.accumulatedExposure >= lightControl.accumulatedExposureThreshold) {
+            lightControl.setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
+          }
 
           lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
 
