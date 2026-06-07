@@ -236,7 +236,7 @@ void AwsMqtt::reconnect() {
       jobState = CONNECTED;
         fConnectingMqtt = false;
       {
-        for (int i = 0;
+        for (unsigned int i = 0;
              i < sizeof(subscribeServerTopic) / sizeof(subscribeServerTopic[0]);
              i++) {
           String serverTopic = String(thingName) + subscribeServerTopic[i];
@@ -1143,7 +1143,7 @@ void AwsMqtt::serverCallback(char *topic, char *payload, unsigned int length) {
   //  if(true){
   if(fprint){
       Serial.print("print all newModeCommand:");
-      for (int n=0; n< payload_manager.list_newModeCommand.size() ; n++){
+      for (unsigned int n=0; n< payload_manager.list_newModeCommand.size() ; n++){
         Serial.print(payload_manager.list_newModeCommand[n]);
         Serial.print(",\t");
       }
@@ -1194,7 +1194,7 @@ void AwsMqtt::serverCallback(char *topic, char *payload, unsigned int length) {
 
       for (JsonVariant v : scheduleArr) {
         int data = v.as<int>();
-        int byteIndex = idx / 8;
+        unsigned int byteIndex = idx / 8;
         int bitIndex = idx % 8;
         if (byteIndex < sizeof(scheduleData)) {
           if (data) {
@@ -1208,7 +1208,7 @@ void AwsMqtt::serverCallback(char *topic, char *payload, unsigned int length) {
 
       if(fprint){
           Serial.print("Server Config schedule updated: ");
-          for (int i = 0; i < sizeof(scheduleData); i++) {
+          for (unsigned int i = 0; i < sizeof(scheduleData); i++) {
             int data = scheduleData[i];
             if (data < 0x10){
             Serial.print("0");
@@ -1224,7 +1224,7 @@ void AwsMqtt::serverCallback(char *topic, char *payload, unsigned int length) {
       idx=0;  //reset this index counter
       for (JsonVariant v : scheduleArr) {
         int data = v.as<int>();
-        int byteIndex = idx / 8;
+        unsigned int byteIndex = idx / 8;
         int bitIndex = idx % 8;
         if (byteIndex < sizeof(  payload_manager.payload_deviceConfig_sub.scheduleData   )     ) {
 //        if (byteIndex < sizeof(42)) {
@@ -1239,7 +1239,7 @@ void AwsMqtt::serverCallback(char *topic, char *payload, unsigned int length) {
 
       if(fprint){
         Serial.print("payload_deviceConfig_sub:");
-        for (int i = 0; i < sizeof(  payload_manager.payload_deviceConfig_sub.scheduleData ); i++) {
+        for (unsigned int i = 0; i < sizeof(  payload_manager.payload_deviceConfig_sub.scheduleData ); i++) {
           int data = payload_manager.payload_deviceConfig_sub.scheduleData[i];
           if (data < 0x10){
           Serial.print("0");
