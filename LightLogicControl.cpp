@@ -912,10 +912,6 @@ float LightLogicControl::getlength(uint32_t startTime, uint32_t endTime) {
 
 void LightLogicControl::setLightState(bool state) {
 
-  if (lightState == state) {
-    return;
-  }
-
   lightState = state;
 
   {

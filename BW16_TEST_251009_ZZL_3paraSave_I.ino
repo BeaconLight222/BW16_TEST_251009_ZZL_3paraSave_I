@@ -1027,29 +1027,16 @@ void sendLoggingAndTelemetryDataToServer() {
 
 void loop() {
 
-  // Serial.println("\r\n—————————————————————————————— Beacon Device Loop Start ————————————————————————————————————————————");
+  Serial.println("\r\n—————————————————————————————— Beacon Device Loop Start ————————————————————————————————————————————");
 
   {
     lightControl.lightState = lightControl.getLightState();
-
-    float temperatureFromTMP;
-    temperatureFromTMP = lightControl.getTemperatureData();
-
-    if (false) {
-      Serial.println("____________________ beacon_pcb.fanControl __________________________");
-      Serial.print("lightControl.lightState:");
-      Serial.println(lightControl.lightState);
-      Serial.print("temperatureFromTMP:");
-      Serial.println(temperatureFromTMP);
-    }
-
-    beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP, false);
   }
 
   // Serial.println("START Checking Button Acitivity ————————————————————————————————————————————");
   int buttonState = checkButtonActivity();
   if ((buttonState & (1 << 0))) {
-    Serial.println("Button short pressed_________________________________________________________________");
+    Serial.println("Button short pressed__________________________________________________________________");
 
     if (lightControl.uvLampMode == UV_MODE_MANUAL) {
       //turn off the light if it is on
@@ -1078,6 +1065,22 @@ void loop() {
 
   }
 
+  { // Check if fan needs to be enabled based on lamp state and temperature
+
+    float temperatureFromTMP;
+    temperatureFromTMP = lightControl.getTemperatureData();
+
+    if (false) {
+      Serial.println("____________________ beacon_pcb.fanControl __________________________");
+      Serial.print("lightControl.lightState:");
+      Serial.println(lightControl.lightState);
+      Serial.print("temperatureFromTMP:");
+      Serial.println(temperatureFromTMP);
+    }
+
+    beacon_pcb.fanControl(lightControl.lightState, temperatureFromTMP, false);
+
+  }
   // Serial.println("———————————————————————————————————————————— END Checking Button Acitivity");
 
   // Serial.println("START Checking WiFi Connection ————————————————————————————————————————————");
@@ -1376,5 +1379,5 @@ void loop() {
   processAwsMqtt_print(false);
   wifiWasConnected = wifiConnected;
   wdt.RefreshWatchdog();
-  // Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
+  Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
 }  //end void loop()
