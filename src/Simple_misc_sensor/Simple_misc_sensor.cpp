@@ -136,12 +136,11 @@ void IO_PCA9539::pinMode(uint8_t pin, uint8_t IOMode) {
         // write configuration register to chip
         
 //handle low
-          bool flag;
         uint8_t buffer[2] = {NXP_CONFIG_LOW,
                             _valueRegister_low,
                             };
 
-        flag = write_then_read(buffer, 2, nullptr, 0, true); 
+        write_then_read(buffer, 2, nullptr, 0, true); 
 
 //handle high
           uint8_t bufferB[2] = {NXP_CONFIG_HIGH,
@@ -152,8 +151,7 @@ void IO_PCA9539::pinMode(uint8_t pin, uint8_t IOMode) {
           //                  _valueRegister_low,
           //                  };
 
-        flag = write_then_read(bufferB, 2, nullptr, 0, true); 
-
+        write_then_read(bufferB, 2, nullptr, 0, true); 
       
         //I2CSetValue(_address, NXP_CONFIG    , _configurationRegister_low);
         //I2CSetValue(_address, NXP_CONFIG + 1, _configurationRegister_high);
@@ -383,7 +381,7 @@ uint32_t PCF85363A::outputNowUnixtime(){
 
 
 bool PCF85363A::clrPIN_IO_CLKPM(){
-  uint8_t  buffer[0];
+  uint8_t  buffer[1];
   uint8_t  result;
 
   buffer[0] = PCF85363A_PIN_IO;
@@ -405,7 +403,7 @@ bool PCF85363A::clrPIN_IO_CLKPM(){
 }
 
  uint8_t  PCF85363A::read_second(void) {
-  uint8_t  buffer[0];
+  uint8_t  buffer[1];
   uint8_t  result;
 
   buffer[0] = PCF85363A_TIME;
@@ -416,7 +414,7 @@ bool PCF85363A::clrPIN_IO_CLKPM(){
 
 bool PCF85363A::clr_OS(void) {
   uint8_t result;
-  uint8_t buffer[0];
+  uint8_t buffer[1];
 
   buffer[0] = PCF85363A_TIME;
   write_then_read(buffer, 1, buffer, 1, false);
