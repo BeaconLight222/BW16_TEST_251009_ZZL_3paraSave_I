@@ -2071,6 +2071,10 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
     return -1;  // Return -1 if EEPROM is not valid
   }
 
+  if (sectionStartTime == 0) {
+    return 0;
+  }
+
   int sectionIndex = -1;
   for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
     int16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
