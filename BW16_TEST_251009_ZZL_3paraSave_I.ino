@@ -772,11 +772,11 @@ void setup() {
 
 
   lightControl.begin();                                                             // fetch eeprom data
-  lightControl.get8hourSectionStartTime();                                          // Initialize the 8-hour bucket timestamp
-  lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime); // Re-load exposure state from EEPROM
-  if (lightControl.accumulatedExposure >= lightControl.accumulatedExposureThreshold) {
-    lightControl.setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
-  }
+  // lightControl.get8hourSectionStartTime();                                          // Initialize the 8-hour bucket timestamp
+  // lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime); // Re-load exposure state from EEPROM
+  // if (lightControl.accumulatedExposure >= lightControl.accumulatedExposureThreshold) {
+  //   lightControl.setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
+  // }
   lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);  //processSmartMode,
   lightControl.processSensorInfo(true);                                             //fetch distance, find min distance
   getSensorData(false);                                                             // emergency shut down below 30cm
@@ -1015,7 +1015,7 @@ void sendLoggingAndTelemetryDataToServer() {
 
                          " ] " + "}" +
 
-                         ", \"firmwareVersion\": " + "\"2026.06.07\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
+                         ", \"firmwareVersion\": " + "\"2026.06.10\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
                          //", \"sensorHealth\": "         + String( lightControl.getsensorHealth() ? "\"ok\"":"\"fault\"") +
                          ", \"error\": " + String(get_errorStatus()) +
                          //", \"error\": "                + "0"                                                            +
