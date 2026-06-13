@@ -1049,14 +1049,13 @@ void loop() {
       Serial.println("Button switching UV lamp mode to OFF____________________________________________________");
 
       lightControl.uvLampMode = UV_MODE_OFF;
-      lightControl.lightState = false;
 
     } else {
       //turn on the light if it is off
       Serial.println("Button switching UV lamp mode to MANUAL__________________________________________________");
 
       lightControl.uvLampMode = INT_UV_MODE_MANUAL;
-      lightControl.lightState = true;
+
     }
 
     lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);
