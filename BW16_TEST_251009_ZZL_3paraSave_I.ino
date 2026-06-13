@@ -772,11 +772,6 @@ void setup() {
 
 
   lightControl.begin();                                                             // fetch eeprom data
-  // lightControl.get8hourSectionStartTime();                                          // Initialize the 8-hour bucket timestamp
-  // lightControl.eepromGetAccumulatedExposure_16Level(lightControl.inProgress8hourSectionStartTime); // Re-load exposure state from EEPROM
-  // if (lightControl.accumulatedExposure >= lightControl.accumulatedExposureThreshold) {
-  //   lightControl.setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
-  // }
   lightControl.processLightControl(awsMqtt.scheduleEnabled, awsMqtt.scheduleData);  //processSmartMode,
   lightControl.processSensorInfo(true);                                             //fetch distance, find min distance
   getSensorData(false);                                                             // emergency shut down below 30cm

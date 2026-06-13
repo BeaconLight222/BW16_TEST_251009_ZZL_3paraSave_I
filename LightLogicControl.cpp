@@ -2079,6 +2079,7 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
     return 0;
   }
 
+
   int sectionIndex = -1;
   for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
     int16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
@@ -2100,6 +2101,7 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
       break;  // Found the section
     }
   }  //end for
+
 
   if (sectionIndex < 0) {
     Serial.println("Section not found, cannot read data.");
@@ -2134,8 +2136,8 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
   for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRY_SIZE - 4; i++) {
     uint8_t julesData = allDataInSection[4 + i];
     for (int j = 0; j < 2; j++) {
-      int julesLevel = (julesData >> (j * 4)) & 0x0F;  // Extract the Jules level for each 2 bits
-      if (julesLevel > 0) {
+      int julesLevel = (julesData >> (j * 4)) & 0x0F;  // Extract the Jules level for each 4 bits
+      if (julesLevel > EXPOSURE_16LEVEL_0 && julesLevel <= EXPOSURE_16LEVEL_15) {
         accumulatedExposure += exposure16LevelToJules[julesLevel];
         //accumulatedExposure += exposureLevelToJules[julesLevel];
       }  //end if
