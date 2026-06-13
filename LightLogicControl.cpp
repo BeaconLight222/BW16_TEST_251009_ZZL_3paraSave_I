@@ -912,46 +912,50 @@ float LightLogicControl::getlength(uint32_t startTime, uint32_t endTime) {
 
 void LightLogicControl::setLightState(bool state) {
 
-  lightState = state;
+  bool accumulatedExposureExceedThreshold = accumulatedExposure >= accumulatedExposureThreshold;
 
-  {
-    uint32_t currentUixTime = this->currentRtcTime.unixtime();
+  uint32_t currentUixTime = this->currentRtcTime.unixtime();
 
-    if (state) {
+  if (state && !accumulatedExposureExceedThreshold) {
 
-      if (!fSetStartTime) {
-        fSetStartTime = true;
+    lightState = true;
 
-        lampOnRecordCache.lampOnTimeStamps_start = currentUixTime;
-        lampOnRecordCache.lampOnTimeStamps_end = currentUixTime;
-        lampOnRecordCache.length = 0;
-        lampOnRecordCache.reason = "trigger turn on";
-      }  //end if
+    if (!fSetStartTime) {
+      fSetStartTime = true;
+
+      lampOnRecordCache.lampOnTimeStamps_start = currentUixTime;
+      lampOnRecordCache.lampOnTimeStamps_end = currentUixTime;
+      lampOnRecordCache.length = 0;
+      lampOnRecordCache.reason = "trigger turn on";
+    }  //end if
 
 
-    } else {
+  } else {
+    // If attempting to turn off OR if the accumulatedExposure exceeds threshold, always set lamp OFF
 
-      if (fSetStartTime) {
+    lightState = false;
 
-        fSetStartTime = false;
+    if (fSetStartTime) {
 
-        lampOnRecordCache.lampOnTimeStamps_end = currentUixTime;
-        lampOnRecordCache.length = (getlength(lampOnRecordCache.lampOnTimeStamps_start, lampOnRecordCache.lampOnTimeStamps_end));
-        lampOnRecordCache.reason = "turn off for any reason";
+      fSetStartTime = false;
 
-      }  //end      if(fSetStartTime)
+      lampOnRecordCache.lampOnTimeStamps_end = currentUixTime;
+      lampOnRecordCache.length = (getlength(lampOnRecordCache.lampOnTimeStamps_start, lampOnRecordCache.lampOnTimeStamps_end));
+      lampOnRecordCache.reason = "turn off for any reason";
 
-    }  //end else
+    }  //end      if(fSetStartTime)
+
+  }  //end else
+
+  if (accumulatedExposureExceedThreshold){
+    Serial.println("Accumulated exposure exceed threshold, blinking white LED");
+    setUiLedState(UI_LED_WHITE, UI_LED_BLINK);
+  } else {
+    Serial.print("Set white LED to: ");
+    Serial.println(lightState ? "ON" : "OFF");
+    setUiLedState(UI_LED_WHITE, lightState ? UI_LED_ON : UI_LED_OFF);
   }
 
-  if (true) {
-    Serial.print("UI_LED_WHITE:");
-    Serial.println(UI_LED_WHITE);
-    Serial.print("lightState:");
-    Serial.println(lightState);
-  }
-
-  setUiLedState(UI_LED_WHITE, lightState ? UI_LED_ON : UI_LED_OFF);
 
   beacon_pcb.ballastPowerControl(lightState ? true : false);
   digitalWrite(PA12, lightState ? LOW : HIGH);  // ballast on when Low
