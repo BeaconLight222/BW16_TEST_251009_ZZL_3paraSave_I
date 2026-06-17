@@ -237,6 +237,7 @@ public:
   uint32_t        lightOnTimeForLoggingInIntervalUnit;
   uint32_t        lightOnTimeLastCheckMilliseconds;
   uint32_t        lightOnTimeNotLoggedYetMilliseconds;
+  bool            lastScheduleInEffect;
 
 };
 

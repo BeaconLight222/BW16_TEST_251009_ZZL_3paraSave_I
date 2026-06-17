@@ -128,6 +128,7 @@ extern PAYLOAD_MANAGER payload_manager;
 LightLogicControl lightControl;
 
 extern volatile int gTimer0Counter;
+extern volatile int gTimer0LedState;
 
 uint32_t lastWifiConnectedTime = 0;
 uint32_t lastWifiTryConnectTime = 0;
@@ -1010,7 +1011,7 @@ void sendLoggingAndTelemetryDataToServer() {
 
                          " ] " + "}" +
 
-                         ", \"firmwareVersion\": " + "\"2026.06.13\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
+                         ", \"firmwareVersion\": " + "\"2026.06.16\"" + ", \"rtcUnixTime\": " + String((int)lightControl.rtc.outputNowUnixtime()) + ", \"accumulatedEnergyMJ\": " + String(lightControl.accumulatedExposure) + ", \"personCount\": " + "\"" + String(lightControl.getpersonCount()) + "+\"" + ", \"temperatureCelsius\": " + String(lightControl.temperatureData, 0) + ", \"lastCommandStatus\": " + "\"success\"" + ", \"motionEvents\": " + String(lightControl.getmotionEvents()) + ", \"uptimeSeconds\": " + String(uptimeSeconds) + ", \"lastErrorTimestamp\": " + String(lastErrorTimestamp) + ", \"sensorHealth\": " + String(lightControl.getsensorHealth_print(false) ? "\"ok\"" : "\"fault\"") +
                          //", \"sensorHealth\": "         + String( lightControl.getsensorHealth() ? "\"ok\"":"\"fault\"") +
                          ", \"error\": " + String(get_errorStatus()) +
                          //", \"error\": "                + "0"                                                            +
@@ -1386,5 +1387,27 @@ void loop() {
   processAwsMqtt_print(false);
   wifiWasConnected = wifiConnected;
   wdt.RefreshWatchdog();
+
+  Serial.print("uvLampMode: ");
+  Serial.print(lightControl.uvLampMode);
+  Serial.print(" lightState: ");
+  Serial.print(lightControl.lightState);
+  Serial.print(" scheduleEnabled: ");
+  Serial.print(awsMqtt.scheduleEnabled);
+  Serial.print(" lastScheduleInEffect: ");
+  Serial.print(lightControl.lastScheduleInEffect);
+  Serial.print(" accumulatedExposure: ");
+  Serial.print(lightControl.accumulatedExposure);
+  Serial.print(" accumulatedExposureThreshold: ");
+  Serial.println(lightControl.accumulatedExposureThreshold);
+
+  int whiteLedCode = (gTimer0LedState >> 0) & 3;
+  int blueLedCode = (gTimer0LedState >> 2) & 3;
+  int redLedCode = (gTimer0LedState >> 4) & 3;
+  Serial.print("White LED: "); Serial.print(whiteLedCode == 1 ? 2 : (whiteLedCode == 2 ? 1 : 0));
+  Serial.print(" Red LED: "); Serial.print(redLedCode == 1 ? 2 : (redLedCode == 2 ? 1 : 0));
+  Serial.print(" Blue LED: "); Serial.println(blueLedCode == 1 ? 2 : (blueLedCode == 2 ? 1 : 0));
+
+
   Serial.println("—————————————————————————————— Beacon Device Loop END ————————————————————————————————————————————\r\n");
 }  //end void loop()

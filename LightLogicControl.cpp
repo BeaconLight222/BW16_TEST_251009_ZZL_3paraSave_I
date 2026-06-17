@@ -379,6 +379,7 @@ LightLogicControl::LightLogicControl() {
   lightOnTimeForLoggingInIntervalUnit = 0;
   lightOnTimeLastCheckMilliseconds = 0;
   lightOnTimeNotLoggedYetMilliseconds = 0;
+  lastScheduleInEffect = false;
 }
 
 
@@ -2453,6 +2454,8 @@ bool LightLogicControl::getscheduleInEffect(uint8_t* scheduleData, bool fprint) 
     setLightState(false);
     //return 0; // Light turned off
   }  //end else
+
+  lastScheduleInEffect = scheduleInEffect; 
 
   return scheduleInEffect;
 
