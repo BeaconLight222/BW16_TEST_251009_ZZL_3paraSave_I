@@ -369,10 +369,13 @@ LightLogicControl::LightLogicControl() {
   temperatureSensorValid = false;
   temperatureData = 0.0f;
   calculatedMinimalDistance = INT_MAX;
-  averagedCalculatedMinimalDistance = INT_MAX;
+  averagedCalculatedMinimalDistance = 0;
   historyIndex = 0;
   for (int i = 0; i < 5; i++) {
-    minimalDistanceHistory[i] = INT_MAX;
+    // Initialize to 0 distance so that a new detections must bring the average up in value
+    //  This should ensure the lamp stays off (due to the proximity threshold) until enough
+    //  detections have been made to ensure the true average is above the threhsold 
+    minimalDistanceHistory[i] = 0;
   }
   minimalDistanceJulesLevel = EXPOSURE_LEVEL_0;
   inProgress8hourSectionStartTime = 0;
@@ -1131,9 +1134,12 @@ int LightLogicControl::processSensorInfo(bool printData) {
       calculatedMinimalDistance = 0;
     }
   } else if (!radar1Valid && !radar2Valid && !thermalSensorValid) {
-    calculatedMinimalDistance = -1;
+    // No valid data, set value to average goes down to ensure lamp eventually turns off
+    calculatedMinimalDistance = 0;  //
   } else {
-    calculatedMinimalDistance = INT_MAX;
+    // All sensors are valid but no objects detected, set to a high value so that lowest jules value is accumulated
+    // TODO this value is quite arbitrary.  Tune it?
+    calculatedMinimalDistance = 5050;
   }
 
   // Rotate the new value of calculatedMinimalDistance into the array
@@ -1142,24 +1148,11 @@ int LightLogicControl::processSensorInfo(bool printData) {
 
   // Calculate the smart average of the 5 values in the array (excluding sentinel values)
   int64_t sum = 0;
-  int validCount = 0;
-  int errorCount = 0;
-  for (int i = 0; i < 5; i++) {
-    if (minimalDistanceHistory[i] == -1) {
-      errorCount++;
-    } else if (minimalDistanceHistory[i] != INT_MAX) {
+  for (int i = 0; i < MINIMAL_DISTANCE_AVERAGE_COUNT; i++) {
       sum += minimalDistanceHistory[i];
-      validCount++;
-    }
   }
 
-  if (validCount > 0) {
-    averagedCalculatedMinimalDistance = (int)(sum / validCount);
-  } else if (errorCount > 0) {
-    averagedCalculatedMinimalDistance = -1;
-  } else {
-    averagedCalculatedMinimalDistance = INT_MAX;
-  }
+  averagedCalculatedMinimalDistance = (int)(sum / 5);
 
   minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(averagedCalculatedMinimalDistance);
 

@@ -106,6 +106,7 @@ enum {
 };
 
 
+#define MINIMAL_DISTANCE_AVERAGE_COUNT (5)
 
 struct lampOnTimeStamps {
   //uint8_t       index;
@@ -214,7 +215,7 @@ public:
   bool            eepromValid;
   int             calculatedMinimalDistance;
   int             averagedCalculatedMinimalDistance;
-  int             minimalDistanceHistory[5];
+  int             minimalDistanceHistory[MINIMAL_DISTANCE_AVERAGE_COUNT];
   int             historyIndex;
   int             minimalDistanceJulesLevel;
   uint32_t        inProgress8hourSectionStartTime;
