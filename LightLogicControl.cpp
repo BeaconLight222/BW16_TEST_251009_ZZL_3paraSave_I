@@ -1440,8 +1440,6 @@ String LightLogicControl::getSensorDataJson() {
 
   String eightHourSectionDataStr =
     eepromGetSectionData_16Level(inProgress8hourSectionStartTime);
-  eightHourSectionDataStr =
-    "\"" + eightHourSectionDataStr + "\"";  // Wrap in quotes for JSON
 
   String compileTimeStr = String(compiledTimeStr);
 
@@ -1983,7 +1981,7 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
 String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime) {
   if (!eepromValid) {
     Serial.println("EEPROM is not valid, skipping section read.");
-    return "";  // Return empty string if EEPROM is not valid
+    return "null";  // Return null if EEPROM is not valid
   }
 
   int sectionIndex = -1;
@@ -1994,7 +1992,7 @@ String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime
     if (ret < 0) {
       Serial.print("Failed to read EEPROM at address ");
       Serial.println(memAddress);
-      return "";  // Return empty string on read failure
+      return "null";  // Return null on read failure
     }
     // Check if the section start time matches
     uint32_t storedSectionStartTime;
@@ -2007,7 +2005,7 @@ String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime
 
   if (sectionIndex < 0) {
     Serial.println("Section not found, cannot read data.");
-    return "";  // Return empty string if section is not found
+    return "null";  // Return null if section is not found
   }
 
   uint8_t allDataInSection[EEPROM_16LEVEL_LOG_ENTRY_SIZE] = { 0 };  // Initialize data to zero
@@ -2016,14 +2014,16 @@ String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime
   if (ret < 0) {
     Serial.print("Failed to read EEPROM at address ");
     Serial.println(EEPROM_16LEVEL_LOG_START_ADDRESS + sectionIndex * EEPROM_16LEVEL_LOG_ENTRY_SIZE);
-    return "";  // Return empty string on read failure
+    return "null";  // Return null on read failure
   }
 
-  int dataByteLength = EEPROM_16LEVEL_LOG_ENTRY_SIZE - 4;  // Exclude the first 4 bytes for section start time
-  String textData = "";
-  textData.reserve(dataByteLength * 3);  // Reserve memory for the string to avoid reallocations
-
-  for (int i = 4; i < EEPROM_16LEVEL_LOG_ENTRY_SIZE; i++) {
+  String data = "";
+  data.reserve(700); // Reserve memory for 120 entries (approx 120 * 5 chars + headers)
+  data = "{\"sectionStartTime\":" + String(sectionStartTime) + ",\"data\":[";
+  // The old format had 120 entries (1 per 4 minutes).
+  // The new format has 240 bytes (1 per 2 minutes, with two 4-bit values per byte).
+  // To match the old 120-entry format, we take every second byte.
+  for (int i = 4; i < EEPROM_16LEVEL_LOG_ENTRY_SIZE; i += 2) {
     uint8_t julesData = allDataInSection[i];
     // convert julesData to padded hex string
     char hexHigh = (julesData >> 4) + '0';
@@ -2034,11 +2034,16 @@ String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime
     if (hexLow > '9') {
       hexLow += 7;  // Convert to A-F
     }
-    textData += hexHigh;
-    textData += hexLow;
-    textData += " ";
+    data += "\"";
+    data += hexHigh;
+    data += hexLow;
+    data += "\"";
+    if (i < EEPROM_16LEVEL_LOG_ENTRY_SIZE - 2) {
+      data += ",";
+    }
   }
-  return textData;
+  data += "]}";
+  return data;
 }
 
 

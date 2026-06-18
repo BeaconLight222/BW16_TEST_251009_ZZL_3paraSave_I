@@ -1401,6 +1401,9 @@ void loop() {
   Serial.print(" accumulatedExposureThreshold: ");
   Serial.println(lightControl.accumulatedExposureThreshold);
 
+  Serial.print("calculatedMinimalDistance: ");
+  Serial.println(lightControl.calculatedMinimalDistance);
+
   int whiteLedCode = (gTimer0LedState >> 0) & 3;
   int blueLedCode = (gTimer0LedState >> 2) & 3;
   int redLedCode = (gTimer0LedState >> 4) & 3;
