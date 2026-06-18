@@ -1130,20 +1130,36 @@ int LightLogicControl::processSensorInfo(bool printData) {
     if (calculatedMinimalDistance < 0) {
       calculatedMinimalDistance = 0;
     }
-  } 
-    calculatedMinimalDistance = -1;  //
-  } 
+  } else if (!radar1Valid && !radar2Valid && !thermalSensorValid) {
+    calculatedMinimalDistance = -1;
+  } else {
+    calculatedMinimalDistance = INT_MAX;
+  }
 
   // Rotate the new value of calculatedMinimalDistance into the array
   minimalDistanceHistory[historyIndex] = calculatedMinimalDistance;
   historyIndex = (historyIndex + 1) % 5;
 
-  // Calculate the average of the 5 values in the array
+  // Calculate the smart average of the 5 values in the array (excluding sentinel values)
   int64_t sum = 0;
+  int validCount = 0;
+  int errorCount = 0;
   for (int i = 0; i < 5; i++) {
-    sum += minimalDistanceHistory[i];
+    if (minimalDistanceHistory[i] == -1) {
+      errorCount++;
+    } else if (minimalDistanceHistory[i] != INT_MAX) {
+      sum += minimalDistanceHistory[i];
+      validCount++;
+    }
   }
-  averagedCalculatedMinimalDistance = (int)(sum / 5);
+
+  if (validCount > 0) {
+    averagedCalculatedMinimalDistance = (int)(sum / validCount);
+  } else if (errorCount > 0) {
+    averagedCalculatedMinimalDistance = -1;
+  } else {
+    averagedCalculatedMinimalDistance = INT_MAX;
+  }
 
   minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(averagedCalculatedMinimalDistance);
 
