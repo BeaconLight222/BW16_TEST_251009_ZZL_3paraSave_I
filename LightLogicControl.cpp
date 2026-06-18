@@ -1439,7 +1439,7 @@ String LightLogicControl::getSensorDataJson() {
   eightHourSectionStartTimeStr = "\"" + eightHourSectionStartTimeStr + "\"";
 
   String eightHourSectionDataStr =
-    eepromGetSectionData(inProgress8hourSectionStartTime);
+    eepromGetSectionData_16Level(inProgress8hourSectionStartTime);
   eightHourSectionDataStr =
     "\"" + eightHourSectionDataStr + "\"";  // Wrap in quotes for JSON
 
@@ -1546,7 +1546,7 @@ uint8_t LightLogicControl::findWhichLevelSection(uint32_t sectionStartTime) {
 
   uint32_t minimalStartTime = 0xFFFFFFFF;  // Initialize to a large value
 
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
+  for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
     uint16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
     uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
     int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
@@ -1616,7 +1616,7 @@ int LightLogicControl::eepromInit_16LevelSection(uint32_t sectionStartTime) {
   uint32_t minimalStartTime = 0xFFFFFFFF;  // Initialize to a large value
   int minimalStartTimeSectionIndex = 0;    // Initialize to -1 to indicate no valid address found
 
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
+  for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
     uint16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
     uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
     int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
@@ -1668,68 +1668,6 @@ int LightLogicControl::eepromInit_16LevelSection(uint32_t sectionStartTime) {
 
 }  //end      int LightLogicControl::eepromInit_16LevelSection
 
-
-/// @brief find a block for the 8-hour section in EEPROM, erase the block and write the section start time at the start of the block
-/// @param sectionStartTime The start time of the section to initialize
-int LightLogicControl::eepromInitSection(uint32_t sectionStartTime) {
-  if (!eepromValid) {
-    Serial.println("EEPROM is not valid, skipping section initialization.");
-    return -1;  // Return -1 if EEPROM is not valid
-  }
-
-  // eeprom memory layout for log entries:
-  // first #define EEPROM_LOG_START_ADDRESS bytes are used for other settings
-  // then there are EEPROM_LOG_ENTRIES entries of EEPROM_LOG_ENTRY_SIZE bytes
-  // each within each entry, the first 4 bytes are used for section start time
-  // and the rest is used for log data
-
-  uint32_t minimalStartTime = 0xFFFFFFFF;  // Initialize to a large value
-  int minimalStartTimeSectionIndex =
-    0;  // Initialize to -1 to indicate no valid address found
-
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
-    uint16_t memAddress = EEPROM_LOG_START_ADDRESS + i * EEPROM_LOG_ENTRY_SIZE;
-    uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
-    int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
-    if (ret < 0) {
-      Serial.print("Failed to read EEPROM at address ");
-      Serial.println(memAddress);
-      return -1;  // Return -1 on read failure
-    }
-    // Check if the section start time matches
-    uint32_t storedSectionStartTime;
-    memcpy(&storedSectionStartTime, startLogTime,
-           sizeof(storedSectionStartTime));
-
-    if (storedSectionStartTime > sectionStartTime) {
-      storedSectionStartTime = 0;  // Reset if the stored time is greater than the section start time
-    }
-    if (storedSectionStartTime < minimalStartTime) {
-      minimalStartTime = storedSectionStartTime;
-      minimalStartTimeSectionIndex = i;
-    }
-    if (storedSectionStartTime == sectionStartTime) {
-      Serial.print("Section already initialized at  ");
-      Serial.println(i);
-      return i;  // Return the address if section is already initialized
-    }
-  }  //end    for (int i = 0; i < EEPROM_LOG_ENTRIES; i++)
-
-  // init the section with the minimal start time
-  Serial.print("Initializing section at index ");
-  Serial.println(minimalStartTimeSectionIndex);
-  uint16_t memAddress = EEPROM_LOG_START_ADDRESS + minimalStartTimeSectionIndex * EEPROM_LOG_ENTRY_SIZE;
-  uint8_t sectionData[EEPROM_LOG_ENTRY_SIZE] = { 0 };  // Initialize data to zero
-  memcpy(sectionData, &sectionStartTime, sizeof(sectionStartTime));
-  int ret = eeprom.write(memAddress, sectionData, sizeof(sectionData));
-  if (ret < 0) {
-    Serial.print("Failed to write EEPROM at address ");
-    Serial.println(memAddress);
-    return -1;  // Return -1 on write failure
-  }
-
-  return minimalStartTimeSectionIndex;
-}
 
 /*
 * Function
@@ -1975,97 +1913,6 @@ int LightLogicControl::eepromWrite16LevelSection(uint32_t sectionStartTime, int 
 }  //end    eepromWrite16LevelSection
 
 
-/// @brief Write the Jules level data to the EEPROM for a certain 8-hour section. Each data point takes 2 bits, so we can store 4 Jules levels in one byte.
-/// @param sectionStartTime The start time of the section to write data to
-/// @param julesLevel The Jules level to write (0-3)
-/// @param dataPointIndex The index of the data point to write
-int LightLogicControl::eepromWriteSection(uint32_t sectionStartTime,
-                                          int julesLevel, int dataPointIndex) {
-  if (!eepromValid) {
-    Serial.println("EEPROM is not valid, skipping section write.");
-    return -1;  // Return -1 if EEPROM is not valid
-  }
-
-  // eeprom memory layout for log entries:
-  // first #define EEPROM_LOG_START_ADDRESS bytes are used for other settings
-  // then there are EEPROM_LOG_ENTRIES entries of EEPROM_LOG_ENTRY_SIZE bytes
-  // each within each entry, the first 4 bytes are used for section start time
-  // and the rest is used for log data
-
-  int sectionIndex = -1;
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
-    int16_t memAddress = EEPROM_LOG_START_ADDRESS + i * EEPROM_LOG_ENTRY_SIZE;
-    uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
-    int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
-    if (ret < 0) {
-      Serial.print("Failed to read EEPROM at address ");
-      Serial.println(memAddress);
-      return -1;  // Return -1 on read failure
-    }
-    // Check if the section start time matches
-    uint32_t storedSectionStartTime;
-    memcpy(&storedSectionStartTime, startLogTime,
-           sizeof(storedSectionStartTime));
-    if (storedSectionStartTime == sectionStartTime) {
-      sectionIndex = i;
-      break;  // Found the section
-    }
-  }
-
-  if (sectionIndex < 0) {
-    Serial.println("Section not found, cannot write data.");
-    return -1;  // Return -1 if section is not found
-  }
-
-  // we use one bytes for 4 Jules levels
-  int dataOffset =
-    4 + dataPointIndex / 4;                   // 4 bytes for section start time, then
-                                              // dataPointIndex byte for Jules level
-  if (dataOffset >= EEPROM_LOG_ENTRY_SIZE) {  //DEBUG: EEPROM_LOG_ENTRY_SIZE-4?
-    Serial.println("Data point index out of bounds.");
-    return -1;  // Return -1 if data point index is out of bounds
-  }
-  int readAddress = EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE + dataOffset;
-  uint8_t julesData = 0;  // Initialize data to zero
-  int ret = eeprom.read(readAddress, &julesData, sizeof(julesData));
-  if (ret < 0) {
-    Serial.print("Failed to read EEPROM at address ");
-    Serial.println(readAddress);
-    return -1;  // Return -1 on read failure
-  }
-  // Set the Jules level
-  julesData &= ~(0x03 << ((dataPointIndex % 4) * 2));  // Clear the bits for the current Jules level
-  julesData |= (julesLevel & 0x03) << ((dataPointIndex % 4) * 2);
-  ret = eeprom.write(readAddress, &julesData, sizeof(julesData));
-  if (ret < 0) {
-    Serial.print("Failed to write EEPROM at address ");
-    Serial.println(readAddress);
-    return -1;  // Return -1 on write failure
-  }
-
-  {
-    // print debug info
-    uint8_t readData[EEPROM_LOG_ENTRY_SIZE] = { 0 };  // Initialize data to zero
-    ret = eeprom.read(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE,
-                      readData, sizeof(readData));
-    if (ret < 0) {
-      Serial.print("Failed to read EEPROM at address ");
-      Serial.println(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE);
-      return -1;  // Return -1 on read failure
-    }
-    Serial.print("EEPROM section data at index ");
-    Serial.print(sectionIndex);
-    Serial.print(": ");
-    for (int i = 0; i < EEPROM_LOG_ENTRY_SIZE; i++) {
-      Serial.print(readData[i], HEX);
-      Serial.print(" ");
-    }
-    Serial.println();
-  }
-
-  return 0;  // Success
-}
-
 /*
 * Function
 * 1) Find out which section in two section
@@ -2080,7 +1927,6 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
     return 0;
   }
 
-
   int sectionIndex = -1;
   for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
     int16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
@@ -2094,24 +1940,20 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
     }
 
     uint32_t storedSectionStartTime;
-    memcpy(&storedSectionStartTime, startLogTime,
-           sizeof(storedSectionStartTime));
+    memcpy(&storedSectionStartTime, startLogTime, sizeof(storedSectionStartTime));
 
     if (storedSectionStartTime == sectionStartTime) {
       sectionIndex = i;
       break;  // Found the section
     }
-  }  //end for
-
+  }
 
   if (sectionIndex < 0) {
     Serial.println("Section not found, cannot read data.");
     return -1;  // Return -1 if section is not found
   }
 
-  uint8_t allDataInSection[EEPROM_16LEVEL_LOG_ENTRY_SIZE] = {
-    0
-  };  // Initialize data to zero
+  uint8_t allDataInSection[EEPROM_16LEVEL_LOG_ENTRY_SIZE] = { 0 };  // Initialize data to zero
   int ret = eeprom.read(EEPROM_16LEVEL_LOG_START_ADDRESS + sectionIndex * EEPROM_16LEVEL_LOG_ENTRY_SIZE,
                         allDataInSection, sizeof(allDataInSection));
 
@@ -2121,18 +1963,6 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
     return -1;  // Return -1 on read failure
   }
 
-  if (false) {
-    uint8_t byteForEnergy;
-    Serial.println("allDataInSection:");
-    for (int i = 0; i < 240; i++) {
-      byteForEnergy = allDataInSection[4 + i];
-      Serial.print(byteForEnergy, HEX);
-      Serial.print(" ");
-      if (((i % 10) == 0) && (i != 0)) { Serial.println(" "); }
-    }  //end    for
-    Serial.println(" ");
-  }  //end  if(false)
-
   accumulatedExposure = 0;
   for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRY_SIZE - 4; i++) {
     uint8_t julesData = allDataInSection[4 + i];
@@ -2140,105 +1970,25 @@ int LightLogicControl::eepromGetAccumulatedExposure_16Level(uint32_t sectionStar
       int julesLevel = (julesData >> (j * 4)) & 0x0F;  // Extract the Jules level for each 4 bits
       if (julesLevel > EXPOSURE_16LEVEL_0 && julesLevel <= EXPOSURE_16LEVEL_15) {
         accumulatedExposure += exposure16LevelToJules[julesLevel];
-        //accumulatedExposure += exposureLevelToJules[julesLevel];
-      }  //end if
-    }    //end for (int j = 0;
-  }      //end   for (int i = 0;
-
-  return accumulatedExposure;
-
-}  //end  int LightLogicControl::eepromGetAccumulatedExposure_16Level
-
-
-/// @brief Get the accumulated exposure for a specific 8-hour section from EEPROM.
-/// @param sectionStartTime The start time of the section to read.
-/// @return The accumulated exposure for the section, or -1 on error.
-int LightLogicControl::eepromGetAccumulatedExposure(uint32_t sectionStartTime) {
-  if (!eepromValid) {
-    Serial.println("EEPROM is not valid, skipping section read.");
-    return -1;  // Return -1 if EEPROM is not valid
-  }
-
-  // eeprom memory layout for log entries:
-  // first #define EEPROM_LOG_START_ADDRESS bytes are used for other settings
-  // then there are EEPROM_LOG_ENTRIES entries of EEPROM_LOG_ENTRY_SIZE bytes
-  // each within each entry, the first 4 bytes are used for section start time
-  // and the rest is used for log data
-
-  int sectionIndex = -1;
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
-    int16_t memAddress = EEPROM_LOG_START_ADDRESS + i * EEPROM_LOG_ENTRY_SIZE;
-    uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
-    int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
-    if (ret < 0) {
-      Serial.print("Failed to read EEPROM at address ");
-      Serial.println(memAddress);
-      return -1;  // Return -1 on read failure
-    }
-    // Check if the section start time matches
-    uint32_t storedSectionStartTime;
-    memcpy(&storedSectionStartTime, startLogTime,
-           sizeof(storedSectionStartTime));
-    if (storedSectionStartTime == sectionStartTime) {
-      sectionIndex = i;
-      break;  // Found the section
-    }
-  }  //end    for (int i = 0; i < EEPROM_LOG_ENTRIES; i++)
-
-  if (sectionIndex < 0) {
-    Serial.println("Section not found, cannot read data.");
-    return -1;  // Return -1 if section is not found
-  }
-
-  uint8_t allDataInSection[EEPROM_LOG_ENTRY_SIZE] = {
-    0
-  };  // Initialize data to zero
-  int ret = eeprom.read(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE,
-                        allDataInSection, sizeof(allDataInSection));
-  if (ret < 0) {
-    Serial.print("Failed to read EEPROM at address ");
-    Serial.println(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE);
-    return -1;  // Return -1 on read failure
-  }
-
-
-  uint8_t byteForEnergy;
-  Serial.println("allDataInSection:");
-  for (int i = 0; i < 120; i++) {
-    byteForEnergy = allDataInSection[4 + i];
-    Serial.print(byteForEnergy, HEX);
-    Serial.print(" ");
-    if ((i % 8) == 0) { Serial.println(" "); }
-  }  //end    for
-  Serial.println(" ");
-
-
-
-  accumulatedExposure = 0;
-  for (int i = 0; i < EEPROM_LOG_ENTRY_SIZE - 4; i++) {
-    uint8_t julesData = allDataInSection[4 + i];
-    for (int j = 0; j < 4; j++) {
-      int julesLevel = (julesData >> (j * 2)) & 0x03;  // Extract the Jules level for each 2 bits
-      if (julesLevel > 0) {
-        accumulatedExposure += exposureLevelToJules[julesLevel];
       }
-    }  //end    for (int j = 0; j < 4; j++)
+    }
   }
+
   return accumulatedExposure;
 }
 
-/// @brief Get the section data for a specific 8-hour section from EEPROM.
+/// @brief Get the section data for a specific 8-hour section from EEPROM (using 16-level data).
 /// @param sectionStartTime The start time of the section to read.
 /// @return The section data as a string for JSON, or an empty string on error.
-String LightLogicControl::eepromGetSectionData(uint32_t sectionStartTime) {
+String LightLogicControl::eepromGetSectionData_16Level(uint32_t sectionStartTime) {
   if (!eepromValid) {
     Serial.println("EEPROM is not valid, skipping section read.");
     return "";  // Return empty string if EEPROM is not valid
   }
 
   int sectionIndex = -1;
-  for (int i = 0; i < EEPROM_LOG_ENTRIES; i++) {
-    int16_t memAddress = EEPROM_LOG_START_ADDRESS + i * EEPROM_LOG_ENTRY_SIZE;
+  for (int i = 0; i < EEPROM_16LEVEL_LOG_ENTRIES; i++) {
+    int16_t memAddress = EEPROM_16LEVEL_LOG_START_ADDRESS + i * EEPROM_16LEVEL_LOG_ENTRY_SIZE;
     uint8_t startLogTime[4] = { 0 };  // Initialize data to zero
     int ret = eeprom.read(memAddress, startLogTime, sizeof(startLogTime));
     if (ret < 0) {
@@ -2248,8 +1998,7 @@ String LightLogicControl::eepromGetSectionData(uint32_t sectionStartTime) {
     }
     // Check if the section start time matches
     uint32_t storedSectionStartTime;
-    memcpy(&storedSectionStartTime, startLogTime,
-           sizeof(storedSectionStartTime));
+    memcpy(&storedSectionStartTime, startLogTime, sizeof(storedSectionStartTime));
     if (storedSectionStartTime == sectionStartTime) {
       sectionIndex = i;
       break;  // Found the section
@@ -2261,23 +2010,20 @@ String LightLogicControl::eepromGetSectionData(uint32_t sectionStartTime) {
     return "";  // Return empty string if section is not found
   }
 
-  uint8_t allDataInSection[EEPROM_LOG_ENTRY_SIZE] = {
-    0
-  };  // Initialize data to zero
-  int ret = eeprom.read(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE,
+  uint8_t allDataInSection[EEPROM_16LEVEL_LOG_ENTRY_SIZE] = { 0 };  // Initialize data to zero
+  int ret = eeprom.read(EEPROM_16LEVEL_LOG_START_ADDRESS + sectionIndex * EEPROM_16LEVEL_LOG_ENTRY_SIZE,
                         allDataInSection, sizeof(allDataInSection));
   if (ret < 0) {
     Serial.print("Failed to read EEPROM at address ");
-    Serial.println(EEPROM_LOG_START_ADDRESS + sectionIndex * EEPROM_LOG_ENTRY_SIZE);
+    Serial.println(EEPROM_16LEVEL_LOG_START_ADDRESS + sectionIndex * EEPROM_16LEVEL_LOG_ENTRY_SIZE);
     return "";  // Return empty string on read failure
   }
 
-  int dataByteLength = EEPROM_LOG_ENTRY_SIZE - 4;  // Exclude the first 4 bytes for section start time
+  int dataByteLength = EEPROM_16LEVEL_LOG_ENTRY_SIZE - 4;  // Exclude the first 4 bytes for section start time
   String textData = "";
-  textData.reserve(dataByteLength * 2);  // Reserve memory for the string to avoid reallocations
-  String data =
-    "{\"sectionStartTime\":" + String(sectionStartTime) + ",\"data\":[";
-  for (int i = 4; i < EEPROM_LOG_ENTRY_SIZE; i++) {
+  textData.reserve(dataByteLength * 3);  // Reserve memory for the string to avoid reallocations
+
+  for (int i = 4; i < EEPROM_16LEVEL_LOG_ENTRY_SIZE; i++) {
     uint8_t julesData = allDataInSection[i];
     // convert julesData to padded hex string
     char hexHigh = (julesData >> 4) + '0';
@@ -2294,6 +2040,7 @@ String LightLogicControl::eepromGetSectionData(uint32_t sectionStartTime) {
   }
   return textData;
 }
+
 
 int LightLogicControl::eepromGetNewestEntryLightOnData() {
   if (!eepromValid) {

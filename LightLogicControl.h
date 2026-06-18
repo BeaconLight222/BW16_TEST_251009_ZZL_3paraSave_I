@@ -38,20 +38,9 @@
 
 
 
-#define EEPROM_LOG_START_ADDRESS 0x040
-#define EEPROM_LOG_ENTRIES 1
-#define EEPROM_LOG_ENTRY_SIZE (4 + 120)
-#define EEPROM_LOG_END_ADDRESS (EEPROM_LOG_START_ADDRESS + EEPROM_LOG_ENTRIES * EEPROM_LOG_ENTRY_SIZE)
 #define EEPROM_LIGHT_LOG_DATA_SIZE 4
 #define EEPROM_LIGHT_LOG_ENTRIES 4
 #define EEPROM_LIGHT_LOG_START_ADDRESS 0x030
-
-//#define EEPROM_SCHEDULE_START_ADDRESS             0x190   //not working
-//#define EEPROM_SCHEDULE_START_ADDRESS               0x1A0 // not working
-//#define EEPROM_SCHEDULE_START_ADDRESS               0x1D0   // not working      
-//#define EEPROM_SCHEDULE_START_ADDRESS               0x1E0    //not working
-//#define EEPROM_SCHEDULE_START_ADDRESS               0x1F0    //not working
-//#define EEPROM_SCHEDULE_START_ADDRESS             0x200           //512 bytes
 
 
 #define EEPROM_16LEVEL_LOG_START_ADDRESS          0x200
@@ -146,11 +135,11 @@ public:
   void initRTC();
   DateTime getCurrentRtcTime();
   uint32_t get8hourSectionStartTime();
-  int eepromInitSection(uint32_t sectionStartTime);
-  int eepromGetAccumulatedExposure(uint32_t sectionStartTime);
-  int eepromWriteSection(uint32_t sectionStartTime, int julesLevel,
-                         int dataPointIndex);
-  String eepromGetSectionData(uint32_t sectionStartTime);
+  int eepromInit_16LevelSection(uint32_t sectionStartTime);
+  int eepromGetAccumulatedExposure_16Level(uint32_t sectionStartTime);
+  int eepromWrite16LevelSection(uint32_t sectionStartTime, int julesLevel, int dataPointIndex);
+  int eepromRead16LevelSection(uint32_t sectionStartTime);
+  String eepromGetSectionData_16Level(uint32_t sectionStartTime);
   int eepromGetNewestEntryLightOnData();
   uint32_t eepromReadLightOnData();
   int eepromWriteLightOnData(uint32_t lightOnTimeForLoggingInIntervalUnit);
@@ -183,9 +172,6 @@ public:
   int       setLongWordEeprom(uint16_t memAddress, uint32_t longData);
   uint32_t  getLongWordEeprom(uint16_t memAddress);
   String    getScheduleStrTad();
-  int       eepromWrite16LevelSection(uint32_t sectionStartTime, int julesLevel, int dataPointIndex);
-  int       eepromInit_16LevelSection(uint32_t sectionStartTime);
-  int       eepromGetAccumulatedExposure_16Level(uint32_t sectionStartTime);
   bool      getsensorHealth_print(bool fprint);
   String    getScheduleStrTad_print(bool fprint);
   String    getScheduleStrAll_print(bool fprint, bool fSchedule);
@@ -194,7 +180,6 @@ public:
   int       getUvLampModeEeprom();  
   bool      getScheduleEnableEeprom(); 
   void      setDetectionModeEeprom();
-  int       eepromRead16LevelSection(uint32_t sectionStartTime);
   uint8_t   findWhichLevelSection(uint32_t sectionStartTime);
   int       eepromClear_16LevelSection(uint8_t index, uint32_t sectionStartTime);
   void      turnOffandRecord();
