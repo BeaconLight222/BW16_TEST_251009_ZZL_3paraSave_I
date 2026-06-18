@@ -947,7 +947,7 @@ void getSensorData(bool wifiStatus) {
         Serial.println(lightControl.getLightState());
 
         // If the light is on, log the sensor data before turning it off
-        String emergencyData = "{\"emergencyOff\": {\"minimalDistanceMm\": " + String(lightControl.calculatedMinimalDistance) + "}}";
+        String emergencyData = "{\"emergencyOff\": {\"minimalDistanceMm\": " + String(lightControl.averagedCalculatedMinimalDistance) + "}}";
         if (wifiStatus) {
           awsMqtt.logSensorToServer((char *)emergencyData.c_str());
           //sendLoggingAndTelemetryDataToServer();

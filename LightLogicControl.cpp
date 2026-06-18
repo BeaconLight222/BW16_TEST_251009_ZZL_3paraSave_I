@@ -1166,7 +1166,7 @@ int LightLogicControl::processSensorInfo(bool printData) {
   if (printData) {
     Serial.println("_____________________________________ Jules _______________________________________");
     Serial.print("Minimal distance: ");
-    Serial.println(calculatedMinimalDistance);
+    Serial.println(averagedCalculatedMinimalDistance);
     Serial.print("Minimal distance in Jules Level: ");
     Serial.print(minimalDistanceJulesLevel);
     Serial.print(", Jules: ");
@@ -1200,7 +1200,7 @@ int LightLogicControl::julesLevelForDistance(int distance) {
 
 
 String LightLogicControl::getDiagnosticsLevelJson_254() {
-  String str_calculatedMinimalDistance = String( calculatedMinimalDistance ); 
+  String str_averagedCalculatedMinimalDistance = String( averagedCalculatedMinimalDistance ); 
   String str_exposure16LevelToJules    = String( exposure16LevelToJules[minimalDistanceJulesLevel] );     
 
   int     accumulatedExposure          = eepromGetAccumulatedExposure_16Level(inProgress8hourSectionStartTime);
@@ -1211,7 +1211,7 @@ String LightLogicControl::getDiagnosticsLevelJson_254() {
   //rtcTimeStr = "\"" + rtcTimeStr + "\"";
 
   String sendJson =
-    "{\"MinimalDistance\":" + str_calculatedMinimalDistance + ",\"Jules\":" + str_exposure16LevelToJules + 
+    "{\"MinimalDistance\":" + str_averagedCalculatedMinimalDistance + ",\"Jules\":" + str_exposure16LevelToJules + 
     ",\"accumulatedExposure\":" + str_accumulatedExposure   + ",\"timestamp\":" + rtcTimeStr + "}";
 
   return sendJson;
