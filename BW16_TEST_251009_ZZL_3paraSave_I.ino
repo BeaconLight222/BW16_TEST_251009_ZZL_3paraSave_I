@@ -937,7 +937,7 @@ void getSensorData(bool wifiStatus) {
   Serial.println(lightControl.calculatedMinimalDistance);
 
   //Emergency shutoff if user appear in 1FT, 30cm
-  if ((lightControl.calculatedMinimalDistance < 300)) {
+  if ((lightControl.averagedCalculatedMinimalDistance < 300)) {
     if (((lightControl.uvLampMode == UV_MODE_SMART) || (lightControl.uvLampMode == UV_MODE_MANUAL))) {
       Serial.println("Minimal distance is less than 30cm, turning off the light");
       if (lightControl.getLightState()) {
@@ -963,7 +963,7 @@ void getSensorData(bool wifiStatus) {
 }  //end      void getSensorData(bool wifiStatus)
 
 void sendLoggingAndTelemetryDataToServer() {
-  bool occupied = (lightControl.calculatedMinimalDistance < 2000);  //consider occupied if someone is closer than 2 meters
+  bool occupied = (lightControl.averagedCalculatedMinimalDistance < 2000);  //consider occupied if someone is closer than 2 meters
   bool lampStatus = lightControl.getLightState();
   bool lampEnable = (lightControl.uvLampMode != UV_MODE_OFF);
 
@@ -1402,7 +1402,9 @@ void loop() {
   Serial.println(lightControl.accumulatedExposureThreshold);
 
   Serial.print("calculatedMinimalDistance: ");
-  Serial.println(lightControl.calculatedMinimalDistance);
+  Serial.print(lightControl.calculatedMinimalDistance);
+  Serial.print(" averagedCalculatedMinimalDistance: ");
+  Serial.println(lightControl.averagedCalculatedMinimalDistance);
 
   int whiteLedCode = (gTimer0LedState >> 0) & 3;
   int blueLedCode = (gTimer0LedState >> 2) & 3;

@@ -369,6 +369,11 @@ LightLogicControl::LightLogicControl() {
   temperatureSensorValid = false;
   temperatureData = 0.0f;
   calculatedMinimalDistance = INT_MAX;
+  averagedCalculatedMinimalDistance = INT_MAX;
+  historyIndex = 0;
+  for (int i = 0; i < 5; i++) {
+    minimalDistanceHistory[i] = INT_MAX;
+  }
   minimalDistanceJulesLevel = EXPOSURE_LEVEL_0;
   inProgress8hourSectionStartTime = 0;
   processedMinutesCount = -1;
@@ -1125,11 +1130,22 @@ int LightLogicControl::processSensorInfo(bool printData) {
     if (calculatedMinimalDistance < 0) {
       calculatedMinimalDistance = 0;
     }
-  } else if (!radar1Valid && !radar2Valid && !thermalSensorValid) {
+  } 
     calculatedMinimalDistance = -1;  //
   } 
 
-  minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(calculatedMinimalDistance);
+  // Rotate the new value of calculatedMinimalDistance into the array
+  minimalDistanceHistory[historyIndex] = calculatedMinimalDistance;
+  historyIndex = (historyIndex + 1) % 5;
+
+  // Calculate the average of the 5 values in the array
+  int64_t sum = 0;
+  for (int i = 0; i < 5; i++) {
+    sum += minimalDistanceHistory[i];
+  }
+  averagedCalculatedMinimalDistance = (int)(sum / 5);
+
+  minimalDistanceJulesLevel = beaconEnergyEngineer.jules16LevelForDistance(averagedCalculatedMinimalDistance);
 
   if (printData) {
     Serial.println("_____________________________________ Jules _______________________________________");
@@ -2285,7 +2301,7 @@ int LightLogicControl::processLightControl(bool scheduleEnabled, uint8_t* schedu
       {
         Serial.println("INT_UV_MODE_MANUAL________________");
 
-        if (calculatedMinimalDistance < 300) {
+        if (averagedCalculatedMinimalDistance < 300) {
           Serial.println("Minimal distance is less than 30cm, turning off the light");
           setLightState(false);
         } else {

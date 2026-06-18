@@ -213,6 +213,9 @@ public:
   Simple_EEPROM_AT24C08 eeprom;
   bool            eepromValid;
   int             calculatedMinimalDistance;
+  int             averagedCalculatedMinimalDistance;
+  int             minimalDistanceHistory[5];
+  int             historyIndex;
   int             minimalDistanceJulesLevel;
   uint32_t        inProgress8hourSectionStartTime;
   int             processedMinutesCount;
