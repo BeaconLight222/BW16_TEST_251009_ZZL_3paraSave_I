@@ -154,18 +154,19 @@ int Simple_Rd_03D::checkRadarData(int timeout) {
               // endian int16 type x is mm, y is mm, speed is cm/s, resolution
               // is mm need more optimization
 
-              int16_t x = (radarRecvBuffer[(offset + 1) % 30] << 8) |
-                          radarRecvBuffer[(offset + 0) % 30];
-              if (x < 0)
-                x = -32768 - x;
-              int16_t y = (radarRecvBuffer[(offset + 3) % 30] << 8) |
-                          radarRecvBuffer[(offset + 2) % 30];
-              if (y < 0)
-                y = -32768 - y;
-              int16_t speed = (radarRecvBuffer[(offset + 5) % 30] << 8) |
+              // 
+              uint16_t raw_x = (radarRecvBuffer[(offset + 1) % 30] << 8) |
+                                radarRecvBuffer[(offset + 0) % 30];
+              int16_t x = ((raw_x & 0x8000) ? 1 : -1) * (raw_x & 0x7FFF);
+
+              uint16_t raw_y = (radarRecvBuffer[(offset + 3) % 30] << 8) |
+                                radarRecvBuffer[(offset + 2) % 30];
+              int16_t y = ((raw_y & 0x8000) ? 1 : -1) * (raw_y & 0x7FFF);
+
+              uint16_t raw_speed = (radarRecvBuffer[(offset + 5) % 30] << 8) |
                               radarRecvBuffer[(offset + 4) % 30];
-              if (speed < 0)
-                speed = -32768 - speed;
+              int16_t speed = ((raw_speed & 0x8000) ? 1 : -1) * (raw_speed & 0x7FFF);
+
               uint16_t resolution = (radarRecvBuffer[(offset + 7) % 30] << 8) |
                                     radarRecvBuffer[(offset + 6) % 30];
               // check if the x, y, speed are all 0

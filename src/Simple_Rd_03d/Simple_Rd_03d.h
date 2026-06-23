@@ -25,7 +25,7 @@ public:
   void disableRadarStreaming();
   void enableRadarStreaming();
 
-  char radarRecvBuffer[30];
+  uint8_t radarRecvBuffer[30];
   int radarRecvBufferIndex;
   int radarDataLength;
 
