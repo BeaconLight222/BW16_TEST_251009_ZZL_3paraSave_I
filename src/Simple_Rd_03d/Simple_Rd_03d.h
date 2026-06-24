@@ -13,6 +13,10 @@ typedef struct {
   int resolution;
 } radarObject_t;
 
+// A frame is 30 bytes
+//  See Section 3.6 in https://aithinker-static.oss-cn-shenzhen.aliyuncs.com/docs/media/Radar/Guide/Rd-03D_V2quick_start_guide.pdf for the Serial Protocol specification 
+#define RARDAR_RECEIVE_BUFFER_SIZE (30)
+
 class Simple_Rd_03D {
 public:
   Simple_Rd_03D();
@@ -26,7 +30,7 @@ public:
   void enableRadarStreaming();
   void debugDumpBuffers();
 
-  uint8_t radarRecvBuffer[30];
+  uint8_t radarRecvBuffer[RARDAR_RECEIVE_BUFFER_SIZE];
   int radarRecvBufferIndex;
   int radarDataLength;
 

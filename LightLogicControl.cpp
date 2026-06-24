@@ -742,8 +742,7 @@ void LightLogicControl::checkRadarData(bool printData) {
   if (radar1Valid) {
     radar1.activeSerialMux();
     // radar1.enableRadarStreaming();
-    int radarNewdata = radar1.checkRadarData(200);  // no enable/disable streaming, takes about 80ms, enable/disable
-                                                     // streaming takes about 180ms
+    int radarNewdata = radar1.checkRadarData(200);
     if (printData) {
       radar1.debugDumpBuffers();
     }
@@ -781,6 +780,10 @@ void LightLogicControl::checkRadarData(bool printData) {
   if (radar2Valid) {
     radar2.activeSerialMux();
     int radarNewdata = radar2.checkRadarData(200);
+
+    if (printData) {
+      radar2.debugDumpBuffers();
+    }
     if (radarNewdata) {
       if (printData) {
         Serial.println("Radar2 data: ");

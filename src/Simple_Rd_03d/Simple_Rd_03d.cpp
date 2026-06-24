@@ -138,6 +138,8 @@ int Simple_Rd_03D::checkRadarData(int timeout) {
   //     Target Resolution: Unsigned int16, single pixel distance value, in mm
   // FRAME TAIL: 0x55 0xCC
 
+  radarObjectCount = 0; // reset the object count before checking for new data
+
   unsigned long startTime = millis();
   while ((int)(millis() - startTime) < timeout) {
     if (Serial1.available()) {
