@@ -39,9 +39,9 @@ boolean Simple_Rd_03D::begin(uint8_t _serial_mux) {
     Serial1.flush();
     unsigned long startTime = millis();
     // expecting response: FD FC FB FA 04 00 90 01 01 00 04 03 02 01
-    // unsigned char dataResponseExpected[] = {0xFD, 0xFC, 0xFB, 0xFA, 0x04,
+    // uint8_t dataResponseExpected[] = {0xFD, 0xFC, 0xFB, 0xFA, 0x04,
     // 0x00, 0x90, 0x01, 0x01, 0x00, 0x04, 0x03, 0x02, 0x01};
-    unsigned char dataResponseExpected[] = {0xFD, 0xFC, 0xFB, 0xFA, 0x04,
+    uint8_t dataResponseExpected[] = {0xFD, 0xFC, 0xFB, 0xFA, 0x04,
                                             0x00, 0x80, 0x01, 0x01, 0x00,
                                             0x04, 0x03, 0x02, 0x01};
     int bytesExpected = 14;
@@ -127,6 +127,10 @@ void Simple_Rd_03D::enableRadarStreaming() {
 int Simple_Rd_03D::checkRadarData(int timeout) {
   // check if the mux changed
   // do digitalRead, then clear the buffer, etc, etc, TODO
+  // A frame has the following format
+  // FRAME HEADER: 0xAA 0xFF 0x03 0x00
+  // In-frame Data (24 bytes): 3 objects, each object has 8 bytes
+  // FRAME TAIL: 0x55 0xCC
 
   unsigned long startTime = millis();
   while ((int)(millis() - startTime) < timeout) {
