@@ -124,12 +124,18 @@ void Simple_Rd_03D::enableRadarStreaming() {
   Serial1.flush();
 }
 
+// This is the best guide I can find for the Serial Protocol specification of the Rd-03D radar sensor:
+// https://aithinker-static.oss-cn-shenzhen.aliyuncs.com/docs/media/Radar/Guide/Rd-03D_V2quick_start_guide.pdf
 int Simple_Rd_03D::checkRadarData(int timeout) {
   // check if the mux changed
   // do digitalRead, then clear the buffer, etc, etc, TODO
   // A frame has the following format
   // FRAME HEADER: 0xAA 0xFF 0x03 0x00
   // In-frame Data (24 bytes): 3 objects, each object has 8 bytes
+  //   Target X Coordinant: Signed int16, highest bit 1 corresponds to positive coordinate, 0 corresponds to negative coordinate, remaning 15 bits represent the absolute value of the x coordinate in millimeters
+  //   Target Y Coordinant: Signed int16, highest bit 1 corresponds to positive coordinate, 0 corresponds to negative coordinate, remaning 15 bits represent the absolute value of the y coordinate in millimeters
+  //          Target Speed: Signed int16, highest bit 1 corresponds to positive speed, 0 corresponds to negative speed, remaning 15 bits represent the absolute value of the speed in cm/s
+  //     Target Resolution: Unsigned int16, single pixel distance value, in mm
   // FRAME TAIL: 0x55 0xCC
 
   unsigned long startTime = millis();
