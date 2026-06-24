@@ -24,6 +24,7 @@ public:
   void activeSerialMux();
   void disableRadarStreaming();
   void enableRadarStreaming();
+  void debugDumpBuffers();
 
   uint8_t radarRecvBuffer[30];
   int radarRecvBufferIndex;

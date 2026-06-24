@@ -895,7 +895,7 @@ void getSensorData(bool wifiStatus) {
   float temperatureFromTMP;
 
   Serial.println("Fetching sensor data...");
-  lightControl.checkRadarData(false);
+  lightControl.checkRadarData(true);
 
   lightControl.rtc.outputNowDateTime();  //currentRtcTime  = this->now();
 

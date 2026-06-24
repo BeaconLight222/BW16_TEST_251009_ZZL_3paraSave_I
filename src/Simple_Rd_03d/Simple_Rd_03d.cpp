@@ -45,7 +45,7 @@ boolean Simple_Rd_03D::begin(uint8_t _serial_mux) {
                                             0x00, 0x80, 0x01, 0x01, 0x00,
                                             0x04, 0x03, 0x02, 0x01};
     int bytesExpected = 14;
-    char recvBuffer[14];
+    uint8_t recvBuffer[14];
     int recvBufferIndex = 0;
     while (millis() - startTime < 100) {
       if (Serial1.available()) {
@@ -137,8 +137,6 @@ int Simple_Rd_03D::checkRadarData(int timeout) {
       if (radarRecvBufferIndex >= (int)(sizeof(radarRecvBuffer))) {
         radarRecvBufferIndex = 0;
       }
-      // Serial.print(c, HEX);
-      // Serial.print(" ");
       if (radarDataLength >= 30) {
         if (radarRecvBuffer[(radarRecvBufferIndex + 0) % 30] == 0xAA &&
             radarRecvBuffer[(radarRecvBufferIndex + 1) % 30] == 0xFF &&
@@ -168,7 +166,7 @@ int Simple_Rd_03D::checkRadarData(int timeout) {
               int16_t speed = ((raw_speed & 0x8000) ? 1 : -1) * (raw_speed & 0x7FFF);
 
               uint16_t resolution = (radarRecvBuffer[(offset + 7) % 30] << 8) |
-                                    radarRecvBuffer[(offset + 6) % 30];
+                                     radarRecvBuffer[(offset + 6) % 30];
               // check if the x, y, speed are all 0
               if (x == 0 && y == 0 && speed == 0) {
                 // no target
@@ -197,3 +195,19 @@ int Simple_Rd_03D::checkRadarData(int timeout) {
   radarObjectCount = -1; // no data received, sensor might be error
   return 0;
 }
+
+void Simple_Rd_03D::debugDumpBuffers() {
+  Serial.print("Radar Dump: ");
+  Serial.print(serial_mux);
+  Serial.print(", radarObjectCount: ");
+  Serial.print(radarObjectCount);
+  Serial.print(", Index: ");
+  Serial.print(radarRecvBufferIndex);
+  Serial.print(", Data Length: ");
+  Serial.println(radarDataLength);
+  for (int i = 0; i < 30; i++) {
+    Serial.print(radarRecvBuffer[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+} 
