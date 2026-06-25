@@ -103,6 +103,8 @@
 
 #include "payload.h"
 
+#include "beacon_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -801,12 +803,20 @@ void setup() {
   Serial.println(lightControl.lightOnTimeForLoggingInIntervalUnit);
 
   // if radar or thermal sensor is not valid, we retry 5 times
-  if (!lightControl.radar1Valid || !lightControl.radar2Valid || !lightControl.thermalSensorValid) {
+  if (!lightControl.radar1Valid || 
+#if defined(ENABLE_RADAR2) && ENABLE_RADAR2
+      !lightControl.radar2Valid || 
+#endif /* defined(ENABLE_RADAR2) && ENABLE_RADAR2 */
+      !lightControl.thermalSensorValid) {
     for (int i = 0; i < 5; i++) {
       Serial.println("Retrying sensor initialization...");
       lightControl.initRadar();
       lightControl.initThermalSensor();
-      if (lightControl.radar1Valid && lightControl.radar2Valid && lightControl.thermalSensorValid) {
+      if (lightControl.radar1Valid && 
+#if defined(ENABLE_RADAR2) && ENABLE_RADAR2
+          lightControl.radar2Valid && 
+#endif /* defined(ENABLE_RADAR2) && ENABLE_RADAR2 */
+          lightControl.thermalSensorValid) {
         break;  // Exit loop if all sensors are valid
       }
       delay(1000);  // Wait before retrying

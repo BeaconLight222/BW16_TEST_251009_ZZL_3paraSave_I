@@ -51,6 +51,7 @@ const int exposureLevelToJules[4] = {
 #include "AwsMqtt.h"
 extern AwsMqtt awsMqtt;
 
+
 volatile int gTimer0Counter = 0;
 volatile int gTimer0LedState = 0;
 
@@ -728,12 +729,16 @@ void LightLogicControl::initRadar() {
     Serial.println("Radar1 initialization failed");
   }
   // radar1.disableRadarStreaming();
+#if defined(RADAR2_ENABLE) && RADAR2_ENABLE
   radar2Valid = radar2.begin(1);
   if (radar2Valid) {
     Serial.println("Radar2 initialized successfully");
   } else {
     Serial.println("Radar2 initialization failed");
   }
+#else
+  Serial.println("Radar2 is disabled, skipping initialization.");
+#endif
 }
 
 /// @brief Check the radar data from both radar sensors
