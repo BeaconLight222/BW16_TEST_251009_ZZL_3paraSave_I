@@ -8,6 +8,7 @@ extern "C" int wifi_set_autoreconnect(uint8_t mode);
 #include "wifi_constants.h"
 #include "wifi_drv.h"
 #include "src/ButtonHandling/ButtonHandler.h"
+#include "src/logic/ButtonActivityLogic.h"
 
 
 #include "wifi_structures.h"
@@ -31,13 +32,6 @@ char *getWifiPasswordAfterFetch() {
 /// - Bit 0: Button is short pressed \n
 /// - Bit 1: Button is long pressed \n
 int checkButtonActivity() {
-  // Check for button activity using the button handler module
   ButtonPressType buttonPressType = button_handler_check_activity_and_reset();
-  int returnValue = 0;
-  if (buttonPressType == SHORT_PRESS) {
-    returnValue |= (1 << 0);
-  } else if (buttonPressType == LONG_PRESS) {
-    returnValue |= (1 << 1);
-  }
-  return returnValue;
+  return buttonPressTypeToBitmask(buttonPressType);
 }

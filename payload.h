@@ -120,6 +120,8 @@ struct PAYLOAD_COMMAND_SUB {
 };
 typedef   struct PAYLOAD_COMMAND_SUB            PAYLOAD_COMMAND_SUB_t;     
 
+/// Holds parsed MQTT/JSON payloads for telemetry publish, device config, and remote commands.
+/// The main sketch reads and updates these structures when AWS messages arrive or are sent.
 class PAYLOAD_MANAGER {
 public:
     PAYLOAD_TELEMETRY_PUB_t                     payload_telemetry_pub; 

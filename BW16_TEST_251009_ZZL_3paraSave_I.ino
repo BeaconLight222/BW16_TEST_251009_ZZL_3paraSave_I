@@ -104,6 +104,7 @@
 #include "payload.h"
 
 #include "beacon_config.h"
+#include "src/logic/ErrorStatusLogic.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -177,31 +178,18 @@ void print_now();
 
 
 uint8_t get_errorStatus() {
-  uint8_t error = ERROR_UNDEFINED;
+  ErrorStatusInputs inputs = {
+    payload_manager.payload_command_sub.factoryReset,
+    payload_manager.payload_command_sub.wifiReset,
+    lightControl.radar1Valid,
+    lightControl.radar2Valid,
+    lightControl.thermalSensorValid,
+    lightControl.temperatureSensorValid,
+    lightControl.eepromValid,
+    lightControl.rtcValid,
+  };
 
-  if (payload_manager.payload_command_sub.factoryReset) {
-    error = ERROR_SYSRESET_FACTORY;
-  } else if (payload_manager.payload_command_sub.wifiReset) {
-    error = ERROR_SYSRESET_WIFI;
-  } else if (!(lightControl.radar1Valid || lightControl.radar2Valid)) {
-    error = ERROR_2XRADAR_INVALID;
-  } else if (!lightControl.temperatureSensorValid) {
-    error = ERROR_TEMPERATURE_INVALID;
-  } else if (!lightControl.eepromValid) {
-    error = ERROR_EEPROM_INVALID;
-  } else if (!lightControl.rtcValid) {
-    error = ERROR_RTC_INVALID;
-  } else if (!lightControl.thermalSensorValid) {
-    error = ERROR_THERMAL_INVALID;
-  } else if (!lightControl.radar2Valid) {
-    error = ERROR_RADAR2_INVALID;
-  } else if (!lightControl.radar1Valid) {
-    error = ERROR_RADAR1_INVALID;
-  } else {
-    error = ERROR_NO;
-  }
-
-  lightControl.errorStatus = error;
+  lightControl.errorStatus = computeErrorStatus(inputs);
   return lightControl.errorStatus;
 
 }  //end      uint8_t   get_errorStatus()

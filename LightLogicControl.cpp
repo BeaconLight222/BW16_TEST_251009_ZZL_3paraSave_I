@@ -12,6 +12,7 @@
 #include <GTimer.h>
 #include "src/mlx90640YoloProcessor/mlx90640YoloProcessor.h"
 #include "NonvolatileDataManager.h"
+#include "src/logic/LightLogicHelpers.h"
 
 extern EnergyEngineer beaconEnergyEngineer;
 
@@ -892,36 +893,16 @@ void LightLogicControl::update() {}
 /// @param ledIndex The index of the LED to set
 /// @param state The state to set the LED to (ON/OFF/Blink)
 void LightLogicControl::setUiLedState(int ledIndex, int state) {
-  int gTimer0LedStateCache = gTimer0LedState;
-  gTimer0LedStateCache &= ~(3 << (ledIndex * 2));     // clear led state
-  gTimer0LedStateCache |= (state << (ledIndex * 2));  // set led state
-  gTimer0LedState = gTimer0LedStateCache;
+  beacon::applyUiLedState(&gTimer0LedState, ledIndex, state);
 }
 
 
 float LightLogicControl::getlength(uint32_t startTime, uint32_t endTime) {
-  bool fprint = false;
-  float _length = 0;
-
-  if (((endTime > startTime) && (startTime > 0) && (endTime > 0)) || ((endTime == startTime) && (startTime > 0))) {
-
-    _length = (float)(endTime - startTime) / 60;
-    if (_length < 0) {
-      _length = 0;
-    }
-
-    if (fprint) {
-      Serial.print("startTime:");
-      Serial.println(startTime);
-      Serial.print("endTime:");
-      Serial.println(endTime);
-      Serial.print("_length:");
-      Serial.println(_length);
-    }
-    lampOnRecordCache.length = _length;
+  const float length = beacon::lampOnDurationMinutes(startTime, endTime);
+  if (length > 0 || ((endTime == startTime) && (startTime > 0))) {
+    lampOnRecordCache.length = length;
   }
-
-  return _length;
+  return length;
 
 }  //end    uint32_t    LightLogicControl::length
 
@@ -1185,20 +1166,7 @@ int LightLogicControl::processSensorInfo(bool printData) {
 /// @brief convert distance to exposure level (4 levels)
 /// @param distance The distance in mm
 int LightLogicControl::julesLevelForDistance(int distance) {
-  // TODO: confirm relationship between distance and jules
-  int julesLevel = EXPOSURE_LEVEL_0;
-
-  if (distance <= 1000) {
-    julesLevel = EXPOSURE_LEVEL_3;
-
-  } else if (distance <= 2500) {
-    julesLevel = EXPOSURE_LEVEL_2;
-
-  } else if (distance <= 4000) {
-    julesLevel = EXPOSURE_LEVEL_1;
-  }
-
-  return julesLevel;
+  return beacon::julesLevelForDistanceFromMm(distance);
 }
 
 
@@ -2149,67 +2117,33 @@ bool LightLogicControl::getscheduleInEffect(uint8_t* scheduleData, bool fprint) 
   uint8_t min = currentUTCTime.minute();
 
   //each slot is 30 minutes, so there are 48 slots in a day
-  int scheduleIndex = dayOfTheWeek * 48 + (hour * 2) + (min / 30);
-
-  //-------------------------- start of process shifting --------------------------------------
-  //int offset;
-  int timeZoneOffsetMinutes;
-  int timeZoneOffsetHour;
-  int shiftindex;
-  timeZoneOffsetMinutes = payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes;
-  timeZoneOffsetHour = timeZoneOffsetMinutes / 60;  //eg    480/60 = 8hour
-
-  shiftindex = scheduleIndexShift[abs(timeZoneOffsetHour)];
-  //shiftindex =  scheduleIndexShift[timeZoneOffsetHour];
+  int scheduleIndex = beacon::computeScheduleIndex(
+    dayOfTheWeek,
+    hour,
+    min,
+    payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes);
 
   if (fprint) {
     Serial.print("Before process,scheduleIndex:");
-    Serial.println(scheduleIndex);  //eg 2,4,6...16(480min)..... 28
+    Serial.println(scheduleIndex);
     Serial.print("timeZoneOffsetMinutes:");
-    Serial.println(timeZoneOffsetMinutes);
+    Serial.println(payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes);
   }
 
-  if (timeZoneOffsetMinutes >= 0) {
-    // case >=0
+  if (payload_manager.payload_deviceConfig_sub.timeZoneOffsetMinutes >= 0) {
     Serial.println("positive");
-
-    scheduleIndex = scheduleIndex + shiftindex;
-
-    if (scheduleIndex < 336) {
-      //dummy
-    } else {
-      scheduleIndex = scheduleIndex - 336;
-    }
-
-
   } else {
     Serial.println("negative");
-    scheduleIndex = scheduleIndex - shiftindex;
-
-    if (scheduleIndex >= 0 && scheduleIndex < 336) {
-      // dummy
-    } else {
-      scheduleIndex = 336 + scheduleIndex;
-      //scheduleIndex = 336 - scheduleIndex;
-    }
-
-
-  }  //end else
+  }
 
   if (fprint) {
     Serial.print("After process,scheduleIndex:");
     Serial.println(scheduleIndex);
   }
 
-  //-------------------------- end of process shifting --------------------------------------
-
-  int byteIndex = scheduleIndex / 8;
-  int bitIndex = scheduleIndex % 8;
-  bool scheduleInEffect = false;
-
-  if (byteIndex >= 0 && byteIndex < 42) {  // 42 bytes for 7 days * 48 slots / 8 bits
-    scheduleInEffect = (scheduleData[byteIndex] & (1 << bitIndex)) != 0;
-  }
+  bool scheduleInEffect = beacon::readScheduleBit(scheduleData, scheduleIndex);
+  const int byteIndex = scheduleIndex / 8;
+  const int bitIndex = scheduleIndex % 8;
 
   if (fprint) {
     Serial.print("Current UTC time:DayOfWk:");

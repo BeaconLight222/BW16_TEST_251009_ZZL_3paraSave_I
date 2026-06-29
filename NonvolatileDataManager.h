@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+/// Provides access to WiFi credentials, AWS TLS certificates, and device identity stored in flash.
+/// Used during boot, WiFi provisioning, and MQTT connection setup.
 class NonvolatileDataManager {
 public:
   static unsigned char *getRootCA();

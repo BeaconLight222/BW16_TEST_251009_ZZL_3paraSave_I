@@ -17,6 +17,8 @@ typedef struct {
 //  See Section 3.6 in https://aithinker-static.oss-cn-shenzhen.aliyuncs.com/docs/media/Radar/Guide/Rd-03D_V2quick_start_guide.pdf for the Serial Protocol specification 
 #define RARDAR_RECEIVE_BUFFER_SIZE (30)
 
+/// UART driver for the RD-03D mmWave radar module used for occupancy and proximity detection.
+/// LightLogicControl reads object distance from one or two instances to decide lamp intensity.
 class Simple_Rd_03D {
 public:
   Simple_Rd_03D();

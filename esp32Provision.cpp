@@ -1,5 +1,6 @@
 #include "esp32Provision.h"
 #include "NonvolatileDataManager.h"
+#include "src/logic/ProvisioningCodec.h"
 
 ESP32Provision *esp32ProvisionObjPtr;
 
@@ -386,14 +387,7 @@ void ESP32Provision::loop() {
 }
 
 std::vector<unsigned char> ESP32Provision::encodeLEB128(int64_t value) {
-    std::vector<unsigned char> result;
-    uint64_t convertedValue = value;  // deal with negative values correctly
-    while (convertedValue > 0x7F) {
-        result.push_back((convertedValue & 0x7F) | 0x80);
-        convertedValue >>= 7;
-    }
-    result.push_back(convertedValue & 0x7F);
-    return result;
+  return beacon::encodeLEB128(value);
 }
 
 std::vector<unsigned char> ESP32Provision::encodeWifiScanResult(char *ssid, uint8_t channel, int32_t rssi, uint8_t *bssid, uint8_t auth){
@@ -426,38 +420,6 @@ std::vector<unsigned char> ESP32Provision::encodeWifiScanResult(char *ssid, uint
     return result;
 }
 
-int ESP32Provision::convertFromRealtekAuthModeToEsp32AuthMode(uint32_t realtekAuthMode){
-switch (realtekAuthMode) {
-    case RTW_SECURITY_OPEN:
-      return (int)WifiAuthMode::Open;
-      break;
-    case RTW_SECURITY_WEP_PSK:
-      return (int)WifiAuthMode::WEP;
-      break;
-    case RTW_SECURITY_WPA_TKIP_PSK:
-      return (int)WifiAuthMode::WPA_PSK;
-      break;
-    case RTW_SECURITY_WPA_AES_PSK:
-      return (int)WifiAuthMode::WPA_PSK;
-      break;
-    case RTW_SECURITY_WPA2_AES_PSK:
-      return (int)WifiAuthMode::WPA2_PSK;
-      break;
-    case RTW_SECURITY_WPA2_TKIP_PSK:
-      return (int)WifiAuthMode::WPA2_PSK;
-      break;
-    case RTW_SECURITY_WPA2_MIXED_PSK:
-      return (int)WifiAuthMode::WPA2_PSK;
-      break;
-    case RTW_SECURITY_WPA_WPA2_MIXED_PSK:
-      return (int)WifiAuthMode::WPA_WPA2_PSK;
-      break;
-    case RTW_SECURITY_WPA3_AES_PSK:
-      return (int)WifiAuthMode::WPA3_PSK;
-      break;
-    case RTW_SECURITY_WPA2_WPA3_MIXED:
-      return (int)WifiAuthMode::WPA2_WPA3_PSK;
-      break;
-  }
-  return (int)WifiAuthMode::Open;  // Default to Open if no match found
+int ESP32Provision::convertFromRealtekAuthModeToEsp32AuthMode(uint32_t realtekAuthMode) {
+  return beacon::convertFromRealtekAuthModeToEsp32AuthMode(realtekAuthMode);
 }

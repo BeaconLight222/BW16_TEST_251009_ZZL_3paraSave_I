@@ -9,7 +9,7 @@ OUTPUT_FILE="${INPUT_FILE}_parsed_log.csv"
 
 if [ ! -f "$INPUT_FILE" ]; then
     echo "Error: File $INPUT_FILE not found."
-    echo "Usage: ./parse_log.sh [input_file.rtf]"
+    echo "Usage: ./bin/parse_log.sh [input_file.rtf]"
     exit 1
 fi
 

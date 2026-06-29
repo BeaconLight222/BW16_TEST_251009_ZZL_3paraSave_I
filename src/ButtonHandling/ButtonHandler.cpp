@@ -57,6 +57,8 @@ int beacon_os_disable_button_interrupt(void) {
 	return 0;
 }
 
+/// Debounces the front-panel button and classifies presses as short or long.
+/// Used by connectionUtils.ino and the main loop for WiFi reset and provisioning actions.
 class ButtonHandler {
 public:
     enum State {

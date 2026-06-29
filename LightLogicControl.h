@@ -121,6 +121,9 @@ struct lampOnTimeStamps {
 };
 typedef   struct lampOnTimeStamps     lampOnTimeStamps_t;
 
+/// Central controller for UV lamp behavior, sensor fusion, scheduling, and EEPROM logging.
+/// Owns radar, thermal, temperature, RTC, and EEPROM drivers and is invoked from the main loop
+/// to decide lamp state, UI LED patterns, and accumulated exposure tracking.
 class LightLogicControl {
 public:
   LightLogicControl();

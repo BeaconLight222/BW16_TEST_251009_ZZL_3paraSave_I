@@ -39,6 +39,8 @@ enum {
 #define NXP_CONFIG     6
 
 
+/// I2C driver for the PCA9539 16-bit I/O expander on the Beacon PCB.
+/// Controls fan, ballast, buzzer, and other digital outputs through expander pins.
 class IO_PCA9539 {
 
   
@@ -90,6 +92,7 @@ private:
 // TMP102 AD0 pin is connected to GND, so the I2C address is 0x48 ||||||||||||||
 #define TMP102_I2C_ADDR 0x48
 
+/// Driver for the TMP102 ambient temperature sensor used for fan and safety logic.
 class Simple_TMP102 {
 public:
   Simple_TMP102();
@@ -131,6 +134,7 @@ public:
   946684800 ///< Unixtime for 2000-01-01 00:00:00, useful for initialization
 
 class TimeSpan;
+/// Calendar date/time value used for scheduling, logging, and telemetry timestamps.
 class DateTime {
 public:
   DateTime(uint32_t t = SECONDS_FROM_1970_TO_2000);
@@ -241,6 +245,7 @@ protected:
   uint8_t ss;   ///< Seconds 0-59
 };
 
+/// Represents a duration in seconds for RTC and logging calculations.
 class TimeSpan {
 public:
   TimeSpan(int32_t seconds = 0);
@@ -288,6 +293,7 @@ protected:
 };
 
 
+/// Driver for the PCF85363A real-time clock that supplies UTC time for scheduling and telemetry.
 class PCF85363A {
 public:
   DateTime outputNowDateTime();
@@ -318,6 +324,7 @@ public:
 };
 
 
+/// Alternate I2C RTC driver for the DS3231 (reference/legacy; primary RTC is PCF85363A).
 class Simple_DS3231 {
 public:
   boolean begin();
@@ -343,6 +350,7 @@ public:
 
 #define EEPROM_START_ADDRESS 0x50
 
+/// I2C driver for the AT24C08 EEPROM that persists schedules, lamp state, and exposure logs.
 class Simple_EEPROM_AT24C08 {
 public:
   boolean begin();
