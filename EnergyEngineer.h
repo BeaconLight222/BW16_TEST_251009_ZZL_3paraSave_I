@@ -1,6 +1,7 @@
-#ifndef ENERGY_ENGINEER
+#ifndef ENERGY_ENGINEER_H
 #define ENERGY_ENGINEER_H
 
+/// Lookup table mapping 16 UV exposure levels to energy values in micro-joules per minute.
 const int exposure16LevelToJules[16]={
 //0, 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10, 11, 12, 13, 14, 15
   0,12,13,18,24,41,54,69,91,113,133,228,332,500,772,1776};
@@ -25,6 +26,8 @@ enum EXPOSURE_16LEVEL{
 };
 typedef   enum EXPOSURE_16LEVEL     EXPOSURE_16LEVEL_t;
 
+/// Converts radar object distance into one of 16 UV exposure intensity levels.
+/// Used by smart-mode lamp control to scale delivered UV energy based on proximity.
 class EnergyEngineer{
 public:
     void  begin();

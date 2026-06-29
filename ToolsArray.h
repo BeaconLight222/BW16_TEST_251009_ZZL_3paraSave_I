@@ -17,6 +17,8 @@ extern "C" {
 */
 
 
+/// Static helpers for manipulating the 42-byte weekly schedule bitfield.
+/// Used when rotating schedule slots and printing schedule bytes during diagnostics.
 class ToolsArray{
 
 public:

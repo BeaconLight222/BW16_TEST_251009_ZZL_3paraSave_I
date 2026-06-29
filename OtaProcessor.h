@@ -8,6 +8,8 @@
 #include "mbedtls/sha256.h"
 #include "mbedtls/x509_crt.h"
 
+/// Handles over-the-air firmware download, flash writes, hash verification, and signature validation.
+/// Instantiated by AwsMqtt when a cloud OTA job is received.
 class OtaProcessor {
 public:
   static int checkFlashSize();

@@ -38,6 +38,8 @@ enum WifiAuthMode {
     WPA2_WPA3_PSK = 7,
 };
 
+/// BLE WiFi provisioning service compatible with the ESP32 provisioning protocol.
+/// Advertises over BLE so a mobile app can scan networks and send SSID/password credentials.
 class ESP32Provision {
 public:
 

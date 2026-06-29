@@ -23,6 +23,8 @@ struct MQTTMessageData {
   String payload;
 };
 
+/// Manages AWS IoT MQTT connectivity, job processing, OTA coordination, and schedule state.
+/// Receives cloud commands and forwards mode changes to LightLogicControl via payload_manager.
 class AwsMqtt {
 public:
   // AwsMqtt(const char* mqttServer, int mqttPort, const char* clientId, const

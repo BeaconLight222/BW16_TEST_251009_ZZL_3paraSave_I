@@ -68,6 +68,8 @@ typedef enum mlx90640_refreshrate {
 
 #define OPENAIR_TA_SHIFT 8 ///< Default 8 degree offset from ambient air
 
+/// Driver for the MLX90640 thermal camera used for person detection and smart-mode occupancy.
+/// Feeds detections into the YOLO post-processor for person counting.
 class Simple_MLX90640 {
 public:
   int readDeviceID(uint8_t _i2c_addr);
